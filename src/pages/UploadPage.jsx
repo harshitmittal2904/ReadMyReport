@@ -81,9 +81,9 @@ export default function UploadPage() {
       } else if (uploadMode === 'image') {
         content = await processImages(files);
       }
-      // Store processed content and navigate to pre-analysis form
+      // Store processed content and navigate directly to analyzing
       sessionStorage.setItem('ld-upload-content', JSON.stringify(content));
-      navigate('/pre-analysis');
+      navigate('/analyzing');
     } catch (error) {
       console.error('Processing error:', error);
       setProcessing(false);

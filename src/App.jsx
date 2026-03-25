@@ -5,7 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
-import PreAnalysisForm from './pages/PreAnalysisForm';
+
 import AnalyzingPage from './pages/AnalyzingPage';
 import DashboardPage from './pages/DashboardPage';
 import LifestylePage from './pages/LifestylePage';
@@ -22,7 +22,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/upload" element={<UploadPage />} />
-            <Route path="/pre-analysis" element={<PreAnalysisForm />} />
+
             <Route path="/analyzing" element={<AnalyzingPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/lifestyle" element={<LifestylePage />} />

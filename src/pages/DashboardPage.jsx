@@ -108,6 +108,11 @@ export default function DashboardPage() {
                 {analysis.lab_name && <> · 🏥 {analysis.lab_name}</>}
               </p>
             )}
+            {(analysis.patient_name || analysis.patient_age || analysis.patient_sex) && (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                👤 {analysis.patient_name ? `${analysis.patient_name}` : 'Patient'}: {analysis.patient_age ? `${analysis.patient_age} ` : ''}{analysis.patient_sex || ''}
+              </p>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
             <ReadAloud text={summaryText} />

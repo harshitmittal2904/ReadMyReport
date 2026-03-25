@@ -39,6 +39,8 @@ Return ONLY a valid JSON response (no markdown fences, no extra text) with this 
   "report_date": "extracted or null",
   "lab_name": "extracted or null",
   "patient_name": "extracted or null",
+  "patient_age": "extracted age or null",
+  "patient_sex": "extracted sex (Male/Female) or null",
   "total_parameters": number,
   "summary": "plain English overall summary, 3-4 sentences",
   "parameters": [
@@ -93,9 +95,6 @@ export async function analyzeReport(content, userContext = {}) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
         contents,
         generationConfig: {
           responseMimeType: "application/json"
@@ -134,18 +133,9 @@ export async function analyzeReport(content, userContext = {}) {
 }
 
 function buildMessages(content, userContext) {
-  let userPrompt = '';
+  let userPrompt = SYSTEM_PROMPT + '\n\n';
 
-  if (userContext.age || userContext.sex || userContext.pregnant) {
-    userPrompt += 'Patient context:\n';
-    if (userContext.age) userPrompt += `- Age: ${userContext.age}\n`;
-    if (userContext.sex) userPrompt += `- Biological sex: ${userContext.sex}\n`;
-    if (userContext.pregnant) userPrompt += `- Currently pregnant: Yes\n`;
-    if (userContext.conditions) userPrompt += `- Known conditions: ${userContext.conditions}\n`;
-    userPrompt += '\nPlease adjust reference ranges accordingly.\n\n';
-  }
-
-  userPrompt += 'Please analyze the following lab report and return the structured JSON response:\n\n';
+  userPrompt += 'Please analyze the following lab report. First, explicitly identify the patient Age and Biological Sex from the report if present. Use these to adjust the reference ranges for each parameter. If not found, default to standard adult ranges. Return the structured JSON response:\n\n';
 
   // If content is text (from PDF extraction)
   if (content.text) {
