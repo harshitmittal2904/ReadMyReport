@@ -13,6 +13,7 @@ import ComparisonPage from './pages/ComparisonPage';
 import SettingsPage from './pages/SettingsPage';
 import HistoryPage from './pages/HistoryPage';
 import GlossaryPage from './pages/GlossaryPage';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
         </main>
         <Footer />
       </BrowserRouter>
+      <Analytics />
     </ThemeProvider>
   );
 }
