@@ -12,6 +12,7 @@ import LifestylePage from './pages/LifestylePage';
 import ComparisonPage from './pages/ComparisonPage';
 import SettingsPage from './pages/SettingsPage';
 import HistoryPage from './pages/HistoryPage';
+import GlossaryPage from './pages/GlossaryPage';
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/glossary" element={<GlossaryPage />} />
           </Routes>
         </main>
         <Footer />

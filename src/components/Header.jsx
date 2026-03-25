@@ -11,6 +11,7 @@ export default function Header() {
     { path: '/', label: t('nav.home'), icon: '🏠' },
     { path: '/upload', label: t('nav.upload'), icon: '📄' },
     { path: '/history', label: t('nav.history'), icon: '📋' },
+    { path: '/glossary', label: t('nav.glossary', 'Glossary'), icon: '📚' },
     { path: '/compare', label: t('nav.compare'), icon: '📊' },
     { path: '/settings', label: t('nav.settings'), icon: '⚙️' },
   ];

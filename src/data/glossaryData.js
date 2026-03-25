@@ -1,0 +1,217 @@
+export const glossaryData = [
+  // ── Blood & Immunity ──
+  {
+    id: 'hemoglobin',
+    name: 'Hemoglobin',
+    abbreviation: 'Hb',
+    system: 'blood_immunity',
+    description: 'A protein in your red blood cells that carries oxygen from your lungs to the rest of your body.',
+    specialist: 'Hematologist or General Physician',
+    keywords: ['anemia', 'tiredness', 'fatigue', 'oxygen', 'pale', 'blood count', 'cbc', 'weakness'],
+  },
+  {
+    id: 'wbc',
+    name: 'White Blood Cell Count',
+    abbreviation: 'WBC',
+    system: 'blood_immunity',
+    description: 'Cells of the immune system that protect your body against infectious diseases and foreign invaders.',
+    specialist: 'Immunologist or General Physician',
+    keywords: ['infection', 'immunity', 'sick', 'fever', 'leukocytes', 'immune system', 'cbc', 'cold', 'flu'],
+  },
+  {
+    id: 'platelets',
+    name: 'Platelet Count',
+    abbreviation: 'PLT',
+    system: 'blood_immunity',
+    description: 'Tiny blood cells that help your body form clots to stop bleeding. If one of your blood vessels gets damaged, it sends out signals that form a clot.',
+    specialist: 'Hematologist',
+    keywords: ['clotting', 'bleeding', 'bruising', 'scab', 'cut', 'cbc'],
+  },
+
+  // ── Heart & Cardiovascular ──
+  {
+    id: 'ldl',
+    name: 'Low-Density Lipoprotein',
+    abbreviation: 'LDL',
+    system: 'heart_cardiovascular',
+    description: 'Often called "bad cholesterol" because it collects in the walls of your blood vessels, raising your chances of health problems like a heart attack or stroke.',
+    specialist: 'Cardiologist',
+    keywords: ['bad cholesterol', 'heart attack', 'stroke', 'plaque', 'fat', 'lipids', 'blood pressure'],
+  },
+  {
+    id: 'hdl',
+    name: 'High-Density Lipoprotein',
+    abbreviation: 'HDL',
+    system: 'heart_cardiovascular',
+    description: 'Often called "good cholesterol". It absorbs cholesterol in the blood and carries it back to the liver, which then flushes it from the body.',
+    specialist: 'Cardiologist',
+    keywords: ['good cholesterol', 'heart health', 'lipids', 'fats'],
+  },
+  {
+    id: 'triglycerides',
+    name: 'Triglycerides',
+    abbreviation: 'TG',
+    system: 'heart_cardiovascular',
+    description: 'A type of fat (lipid) found in your blood. When you eat, your body converts any calories it doesn\'t need to use right away into triglycerides.',
+    specialist: 'Cardiologist or Endocrinologist',
+    keywords: ['fat', 'calories', 'weight', 'heart disease', 'lipids', 'metabolism'],
+  },
+
+  // ── Liver ──
+  {
+    id: 'alt',
+    name: 'Alanine Aminotransferase',
+    abbreviation: 'ALT',
+    system: 'liver',
+    description: 'An enzyme found mostly in the cells of the liver and kidney. When the liver is damaged, ALT is released into the blood.',
+    specialist: 'Hepatologist or Gastroenterologist',
+    keywords: ['liver damage', 'alcohol', 'toxins', 'jaundice', 'drinking', 'lft', 'hepatic'],
+  },
+  {
+    id: 'ast',
+    name: 'Aspartate Aminotransferase',
+    abbreviation: 'AST',
+    system: 'liver',
+    description: 'An enzyme found in cells throughout the body but mostly in the heart and liver. Useful for detecting liver damage.',
+    specialist: 'Hepatologist or Gastroenterologist',
+    keywords: ['liver damage', 'heart', 'muscle', 'lft', 'alcohol', 'hepatic'],
+  },
+  {
+    id: 'bilirubin',
+    name: 'Bilirubin (Total)',
+    abbreviation: 'TBIL',
+    system: 'liver',
+    description: 'A yellowish pigment that is made during the normal breakdown of red blood cells. Passes through the liver and is correctly excreted.',
+    specialist: 'Hepatologist',
+    keywords: ['yellow skin', 'yellow eyes', 'jaundice', 'gallbladder', 'lft'],
+  },
+
+  // ── Kidneys ──
+  {
+    id: 'creatinine',
+    name: 'Creatinine',
+    abbreviation: 'Cr',
+    system: 'kidneys',
+    description: 'A waste product from the normal breakdown of muscle tissue. As creatinine is produced, it\'s filtered through the kidneys and excreted in urine.',
+    specialist: 'Nephrologist',
+    keywords: ['kidney function', 'urine', 'muscle breakdown', 'filtration', 'kft', 'renal'],
+  },
+  {
+    id: 'bun',
+    name: 'Blood Urea Nitrogen',
+    abbreviation: 'BUN',
+    system: 'kidneys',
+    description: 'Measures the amount of urea nitrogen in your blood. Urea nitrogen is a waste product made when your liver breaks down protein.',
+    specialist: 'Nephrologist',
+    keywords: ['kidneys', 'protein breakdown', 'hydration', 'kft', 'renal'],
+  },
+  {
+    id: 'uric_acid',
+    name: 'Uric Acid',
+    abbreviation: 'UA',
+    system: 'kidneys',
+    description: 'A natural waste product from the digestion of foods that contain purines. High levels can cause crystals to form in joints, causing gout.',
+    specialist: 'Rheumatologist or Nephrologist',
+    keywords: ['gout', 'joint pain', 'swollen toe', 'crystals', 'purine', 'meat', 'kidney stones'],
+  },
+
+  // ── Thyroid ──
+  {
+    id: 'tsh',
+    name: 'Thyroid Stimulating Hormone',
+    abbreviation: 'TSH',
+    system: 'thyroid',
+    description: 'A hormone produced by the pituitary gland that tells the thyroid gland to make and release thyroid hormones into the blood.',
+    specialist: 'Endocrinologist',
+    keywords: ['metabolism', 'weight gain', 'weight loss', 'cold', 'hot', 'fatigue', 'energy', 'hair loss'],
+  },
+  {
+    id: 'free_t4',
+    name: 'Free Thyroxine',
+    abbreviation: 'FT4',
+    system: 'thyroid',
+    description: 'The active form of the thyroxine hormone produced by the thyroid gland. It regulates your body\'s metabolic rate.',
+    specialist: 'Endocrinologist',
+    keywords: ['metabolism', 'energy', 'thyroid gland', 'weight'],
+  },
+
+  // ── Pancreas & Metabolism ──
+  {
+    id: 'fasting_glucose',
+    name: 'Fasting Blood Glucose',
+    abbreviation: 'FBS',
+    system: 'pancreas_metabolism',
+    description: 'Measures the amount of sugar (glucose) in your blood after you haven\'t eaten for at least 8 hours.',
+    specialist: 'Endocrinologist',
+    keywords: ['sugar', 'diabetes', 'insulin', 'insulin resistance', 'energy', 'pancreas'],
+  },
+  {
+    id: 'hba1c',
+    name: 'Hemoglobin A1c',
+    abbreviation: 'HbA1c',
+    system: 'pancreas_metabolism',
+    description: 'Measures your average blood sugar levels over the past 2 to 3 months. Used heavily to diagnose or monitor pre-diabetes and diabetes.',
+    specialist: 'Endocrinologist',
+    keywords: ['long term sugar', 'diabetes', 'pre-diabetes', 'glucose', 'sweet'],
+  },
+
+  // ── Vitamins & Minerals ──
+  {
+    id: 'vitamin_d',
+    name: 'Vitamin D (25-OH)',
+    abbreviation: 'Vit D',
+    system: 'vitamins_minerals',
+    description: 'Vital for bone health, immune function, and calcium absorption. Mainly produced in the skin upon exposure to sunlight.',
+    specialist: 'General Physician or Endocrinologist',
+    keywords: ['sunlight', 'bones', 'immunity', 'depression', 'fatigue', 'mood'],
+  },
+  {
+    id: 'vitamin_b12',
+    name: 'Vitamin B12',
+    abbreviation: 'B12',
+    system: 'vitamins_minerals',
+    description: 'Crucial for nerve function, brain health, and the production of red blood cells. Often low in strict vegan/vegetarian diets without supplementation.',
+    specialist: 'General Physician or Neurologist',
+    keywords: ['energy', 'nerves', 'tingling', 'brain fog', 'memory', 'vegan', 'meat', 'fatigue'],
+  },
+  {
+    id: 'iron',
+    name: 'Serum Iron',
+    abbreviation: 'Fe',
+    system: 'vitamins_minerals',
+    description: 'An essential mineral. Your body needs it to make hemoglobin, ensuring your organs and tissues receive enough oxygen.',
+    specialist: 'Hematologist or General Physician',
+    keywords: ['anemia', 'tiredness', 'weakness', 'hair loss', 'cold hands', 'pale'],
+  },
+
+  // ── Hormones ──
+  {
+    id: 'testosterone',
+    name: 'Total Testosterone',
+    abbreviation: 'T',
+    system: 'hormones',
+    description: 'The primary male sex hormone, also present in smaller amounts in females. Affects muscle mass, bone density, and sex drive.',
+    specialist: 'Endocrinologist or Urologist',
+    keywords: ['libido', 'sex drive', 'muscle', 'mood', 'energy', 'hair growth'],
+  },
+  {
+    id: 'cortisol',
+    name: 'Cortisol',
+    abbreviation: 'Cort',
+    system: 'hormones',
+    description: 'Often called the "stress hormone." It regulates your body\'s stress response, metabolism, inflammation, and sleep-wake cycles.',
+    specialist: 'Endocrinologist',
+    keywords: ['stress', 'anxiety', 'sleep', 'weight gain', 'belly fat', 'adrenal'],
+  },
+
+  // ── Inflammation & Infection ──
+  {
+    id: 'crp',
+    name: 'C-Reactive Protein',
+    abbreviation: 'CRP',
+    system: 'inflammation_infection',
+    description: 'A protein made by your liver. CRP levels in your blood increase when there is a condition causing inflammation somewhere in your body.',
+    specialist: 'Rheumatologist or Cardiologist',
+    keywords: ['inflammation', 'swelling', 'infection', 'heart risk', 'autoimmune', 'pain'],
+  }
+];
