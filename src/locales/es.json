@@ -1,0 +1,66 @@
+{
+  "app_name": "LabDecode",
+  "tagline": "Tus análisis de laboratorio, finalmente entendidos.",
+  "nav": {
+    "home": "Inicio",
+    "upload": "Subir Informe",
+    "history": "Mis Informes",
+    "compare": "Comparar",
+    "settings": "Configuración"
+  },
+  "landing": {
+    "hero_title": "Tus Análisis de Laboratorio,",
+    "hero_title2": "Finalmente Entendidos.",
+    "hero_subtitle": "Sube tu informe de laboratorio — PDF, foto o cámara — y obtén un desglose claro y visual de cada parámetro.",
+    "cta": "Analizar Mi Informe",
+    "trust_1": "Herramienta Educativa",
+    "trust_2": "Sin Datos en Servidores",
+    "trust_3": "Funciona Con Cualquier Informe del Mundo",
+    "trust_4": "Información Basada en Evidencia"
+  },
+  "upload": {
+    "title": "Sube Tu Informe de Laboratorio",
+    "subtitle": "Elige cómo compartir tu informe",
+    "pdf_title": "Subir PDF",
+    "pdf_desc": "Arrastra y suelta o selecciona tu informe PDF",
+    "camera_title": "Tomar una Foto",
+    "camera_desc": "Usa tu cámara para capturar las páginas de tu informe",
+    "image_title": "Subir Imágenes",
+    "image_desc": "Selecciona fotos de tu informe desde tu galería",
+    "retake": "Repetir",
+    "looks_good": "Se ve bien, Analizar"
+  },
+  "preanalysis": {
+    "title": "Ayúdanos a Personalizar Tus Resultados",
+    "subtitle": "Esta información nos ayuda a proporcionar rangos de referencia más precisos.",
+    "age": "Edad",
+    "sex": "Sexo Biológico",
+    "male": "Masculino",
+    "female": "Femenino",
+    "prefer_not": "Prefiero no decir",
+    "pregnant": "¿Actualmente embarazada?",
+    "skip": "Omitir",
+    "continue": "Continuar"
+  },
+  "dashboard": {
+    "title": "Tus Resultados",
+    "summary": "Resumen",
+    "parameters_tested": "parámetros analizados",
+    "in_range": "en rango",
+    "out_of_range": "necesitan atención"
+  },
+  "status": {
+    "excellent": "Excelente",
+    "normal": "Normal",
+    "needs_attention": "Necesita Atención",
+    "review_recommended": "Revisión Recomendada"
+  },
+  "disclaimers": {
+    "footer": "LabDecode es una herramienta educativa de alfabetización en salud. No sustituye el consejo médico profesional, el diagnóstico ni el tratamiento.",
+    "results_banner": "Este análisis te ayuda a entender tu informe. Comparte estos resultados con tu médico para orientación médica personalizada."
+  },
+  "errors": {
+    "analysis_failed": "Estamos teniendo problemas para analizar tu informe. Por favor intenta de nuevo en un momento.",
+    "no_api_key": "Por favor agrega tu clave API de Anthropic en Configuración para analizar informes."
+  }
+}
