@@ -57,7 +57,7 @@ export default function ParameterDetail({ parameter, simple = false }) {
 
           {/* What is this */}
           {p.explanation && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
               <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
                 {t('parameter.what_is')}
               </h4>
@@ -69,7 +69,7 @@ export default function ParameterDetail({ parameter, simple = false }) {
             <>
               {/* Why it matters */}
               {p.why_it_matters && (
-                <div style={{ marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '0.75rem' }}>
                   <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
                     {t('parameter.why_matters')}
                   </h4>
@@ -79,7 +79,7 @@ export default function ParameterDetail({ parameter, simple = false }) {
 
               {/* Influences */}
               {p.influences && p.influences.length > 0 && (
-                <div style={{ marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '0.75rem' }}>
                   <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.375rem' }}>
                     {t('parameter.influences')}
                   </h4>
@@ -100,7 +100,7 @@ export default function ParameterDetail({ parameter, simple = false }) {
 
               {/* Specialist */}
               {p.specialist && (
-                <div style={{ marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '0.75rem' }}>
                   <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
                     {t('parameter.specialist')}
                   </h4>

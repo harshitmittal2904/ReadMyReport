@@ -255,5 +255,25 @@ body {
 @media print {
   .no-print { display: none !important; }
   body { background: white; color: black; }
-  .card { box-shadow: none; border: 1px solid #ccc; }
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+  }
+  
+  [data-large-text="true"] h1 { font-size: 2rem !important; }
+  [data-large-text="true"] h3 { font-size: 1.25rem !important; }
+  
+  body {
+    font-size: 15px; /* Slightly tighter base size on small screens */
+  }
+
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+

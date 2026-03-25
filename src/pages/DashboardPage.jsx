@@ -167,9 +167,8 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Organ System View */}
       {view === 'organs' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
           {Object.entries(systems).map(([sys, params]) => {
             const filteredSystemParams = filter === 'all' ? params : params.filter(p => p.status === filter);
             if (filteredSystemParams.length === 0) return null;

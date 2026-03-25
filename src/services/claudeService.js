@@ -9,8 +9,8 @@ YOUR JOB:
 2. CRITICAL: ONLY extract parameters that are EXPLICITLY listed in the provided lab report. DO NOT hallucinate, infer, or add any parameters that are not present. If a test was not performed, DO NOT include it. Your output MUST strictly mirror the contents of the report.
 3. Categorize each parameter by organ system
 3. Assign a status: excellent / normal / needs_attention / review_recommended
-4. Explain each parameter in 2-3 plain-English sentences
-5. If a value is outside the reference range, explain what might cause that WITHOUT naming specific diseases
+4. Explain each parameter in 3-4 plain-English, educational sentences that help the user completely understand their body's function
+5. If a value is outside the reference range, explain what physiological mechanisms might cause that WITHOUT naming specific diseases or creating alarm
 6. Suggest which type of medical specialist typically reviews that parameter
 7. Provide evidence-based lifestyle considerations for out-of-range values
 
@@ -42,7 +42,7 @@ Return ONLY a valid JSON response (no markdown fences, no extra text) with this 
   "patient_age": "extracted age or null",
   "patient_sex": "extracted sex (Male/Female) or null",
   "total_parameters": number,
-  "summary": "plain English overall summary, 3-4 sentences",
+  "summary": "Highly detailed, educational plain English overall synthesis (6-8 sentences). Explicitly evaluate how the patient's different tested organ systems are interacting based ONLY on the available data.",
   "parameters": [
     {
       "name": "Parameter Name",
