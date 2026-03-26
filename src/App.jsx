@@ -8,6 +8,7 @@ import MobileNav from './components/MobileNav';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import AnalyzingPage from './pages/AnalyzingPage';
+import { Analytics } from '@vercel/analytics/react';
 
 // Lazy-loaded pages (not needed on initial load)
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -53,6 +54,7 @@ export default function App() {
         <Footer />
         <MobileNav />
       </BrowserRouter>
+      <Analytics />
     </ThemeProvider>
   );
 }
