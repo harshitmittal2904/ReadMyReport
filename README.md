@@ -1,16 +1,67 @@
-# React + Vite
+# LabDecode — Your Lab Reports, Finally Understood
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI-powered lab report analyzer that translates complex medical reports into plain, understandable language. Upload any blood test, metabolic panel, or lab report — get instant, categorized insights organized by body system.
 
-Currently, two official plugins are available:
+**Live:** [read-my-report.vercel.app](https://read-my-report.vercel.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Upload PDF or capture with camera
+- AI-powered analysis using Gemini 2.5 Flash
+- Results grouped by organ system (Heart, Liver, Kidneys, Blood, Thyroid, etc.)
+- Color-coded status: Excellent / Normal / Needs Attention / Review Recommended
+- Visual range bars for every parameter
+- Evidence-based lifestyle suggestions with medical source citations
+- Works with lab reports from any country (auto-detects units)
+- Unit conversion between Conventional (US) and SI (International)
+- Multi-report comparison with trend charts
+- Offline searchable glossary of 100+ health metrics
+- Dark mode, large text, high contrast, and simple mode
+- Multi-language support (English, Hindi, Spanish)
+- No data stored on servers — privacy first
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+React 19 &bull; Tailwind CSS v4 &bull; Gemini API &bull; Vercel Serverless Functions &bull; PDF.js &bull; Recharts &bull; i18next
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Environment Variables
+
+Set the following in your Vercel project settings (or `.env.local` for development):
+
+```
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+## Architecture
+
+```
+src/
+  pages/          Landing, Upload, Analyzing, Dashboard, Lifestyle, History, Compare, Glossary, Settings
+  components/     Header, Footer, CameraCapture, ParameterDetail, RangeBar, OrganSystemCard, etc.
+  services/       claudeService.js (API), pdfService.js (PDF extraction)
+  contexts/       ThemeContext (dark mode, accessibility)
+  utils/          storage, unitConversion, referenceRanges, imageCompression
+  data/           glossaryData (100+ medical terms)
+  locales/        en.json, hi.json, es.json
+api/
+  analyze.js      Vercel serverless proxy to Gemini API
+```
+
+## Disclaimer
+
+LabDecode is an educational health literacy tool. It does not diagnose, prescribe, or replace professional medical advice.
+
+Built by [Harshit Mittal](https://linkedin.com/in/harshitmittal2904)

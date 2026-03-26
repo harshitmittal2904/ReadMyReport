@@ -6,7 +6,8 @@
     "upload": "रिपोर्ट अपलोड करें",
     "history": "मेरी रिपोर्ट्स",
     "compare": "तुलना करें",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "glossary": "शब्दावली"
   },
   "landing": {
     "hero_title": "आपकी लैब रिपोर्ट,",
@@ -47,7 +48,19 @@
     "no": "नहीं",
     "conditions": "ज्ञात स्थितियाँ (वैकल्पिक)",
     "skip": "छोड़ें",
-    "continue": "आगे बढ़ें"
+    "continue": "आगे बढ़ें",
+    "age_range": "आयु सीमा",
+    "biological_sex": "जैविक लिंग",
+    "sex_male": "पुरुष",
+    "sex_female": "महिला",
+    "sex_prefer_not_to_say": "बताना नहीं चाहते",
+    "condition_diabetes": "मधुमेह",
+    "condition_thyroid": "थायराइड",
+    "condition_heart": "हृदय रोग",
+    "condition_kidney": "गुर्दा",
+    "condition_anemia": "एनीमिया",
+    "condition_none": "कोई नहीं",
+    "skip_note": "कोई बात नहीं! आपके परिणाम मानक संदर्भ श्रेणियों का उपयोग करेंगे।"
   },
   "dashboard": {
     "title": "आपके परिणाम",

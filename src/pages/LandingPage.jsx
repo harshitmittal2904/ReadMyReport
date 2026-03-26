@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 export default function LandingPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const features = [
     { icon: '📱', title: t('landing.feature_1_title'), desc: t('landing.feature_1_desc') },
@@ -12,11 +13,21 @@ export default function LandingPage() {
   ];
 
   const trustBadges = [
-    { icon: '🎓', label: t('landing.trust_1') },
-    { icon: '🔒', label: t('landing.trust_2') },
-    { icon: '🌐', label: t('landing.trust_3') },
-    { icon: '📚', label: t('landing.trust_4') },
+    { icon: '🔒', label: 'Your data stays on your device — nothing is stored' },
+    { icon: '📋', label: 'Based on NIH, WHO & international medical reference ranges' },
+    { icon: '🌍', label: 'Works with lab reports from any country' },
+    { icon: '🆓', label: 'Completely free — no signup required' },
   ];
+
+  const handleTrySample = () => {
+    // Lazy-load sample data and navigate to dashboard
+    import('../data/sampleReport').then(mod => {
+      sessionStorage.setItem('ld-analysis-result', JSON.stringify(mod.sampleReport));
+      navigate('/dashboard');
+    }).catch(() => {
+      navigate('/upload');
+    });
+  };
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -83,21 +94,32 @@ export default function LandingPage() {
             {t('landing.hero_subtitle')}
           </p>
 
-          <Link to="/upload" className="btn btn-primary animate-slide-up" style={{
-            fontSize: '1.125rem',
-            padding: '1rem 2.5rem',
-            borderRadius: '999px',
+          <div className="animate-slide-up" style={{
+            display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap',
             animationDelay: '0.2s',
-            boxShadow: '0 4px 15px rgba(15,118,110,0.3)',
           }}>
-            🧬 {t('landing.cta')}
-          </Link>
+            <Link to="/upload" className="btn btn-primary" style={{
+              fontSize: '1.125rem',
+              padding: '1rem 2.5rem',
+              borderRadius: '999px',
+              boxShadow: '0 4px 15px rgba(15,118,110,0.3)',
+            }}>
+              🧬 {t('landing.cta')}
+            </Link>
+            <button onClick={handleTrySample} className="btn btn-secondary" style={{
+              fontSize: '1rem',
+              padding: '1rem 2rem',
+              borderRadius: '999px',
+            }}>
+              📊 Try with a Sample Report
+            </button>
+          </div>
 
           {/* Trust Badges */}
           <div className="animate-slide-up" style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '1rem',
+            gap: '0.75rem',
             marginTop: '3rem',
             flexWrap: 'wrap',
             animationDelay: '0.3s',
@@ -122,6 +144,25 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Disclaimer below hero */}
+      <div style={{
+        textAlign: 'center',
+        padding: '0 1.5rem',
+        marginTop: '-2rem',
+        marginBottom: '2rem',
+      }}>
+        <p style={{
+          fontSize: '0.85rem',
+          color: 'var(--text-muted)',
+          maxWidth: '700px',
+          margin: '0 auto',
+          lineHeight: 1.6,
+          fontStyle: 'italic',
+        }}>
+          LabDecode is an educational health literacy tool. It does not diagnose, prescribe, or replace professional medical advice.
+        </p>
+      </div>
 
       {/* Features Section */}
       <section style={{

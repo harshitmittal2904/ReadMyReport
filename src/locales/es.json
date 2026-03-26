@@ -6,7 +6,8 @@
     "upload": "Subir Informe",
     "history": "Mis Informes",
     "compare": "Comparar",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "glossary": "Glosario"
   },
   "landing": {
     "hero_title": "Tus Análisis de Laboratorio,",
@@ -40,7 +41,22 @@
     "prefer_not": "Prefiero no decir",
     "pregnant": "¿Actualmente embarazada?",
     "skip": "Omitir",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "yes": "Sí",
+    "no": "No",
+    "conditions": "Condiciones conocidas (opcional)",
+    "age_range": "Rango de Edad",
+    "biological_sex": "Sexo Biológico",
+    "sex_male": "Masculino",
+    "sex_female": "Femenino",
+    "sex_prefer_not_to_say": "Prefiero no decir",
+    "condition_diabetes": "Diabetes",
+    "condition_thyroid": "Tiroides",
+    "condition_heart": "Enfermedad Cardíaca",
+    "condition_kidney": "Riñón",
+    "condition_anemia": "Anemia",
+    "condition_none": "Ninguna",
+    "skip_note": "¡No hay problema! Tus resultados usarán rangos de referencia estándar."
   },
   "dashboard": {
     "title": "Tus Resultados",

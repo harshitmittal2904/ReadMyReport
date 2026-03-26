@@ -43,6 +43,9 @@ export default function LifestylePage() {
     grouped[s.category].push(s);
   });
 
+  // Pick top 3 most impactful suggestions (prioritize nutrition/movement, from different categories)
+  const topThree = suggestions.slice(0, 3);
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem' }}>
       <div className="animate-slide-up" style={{ marginBottom: '1.5rem' }}>
@@ -55,6 +58,51 @@ export default function LifestylePage() {
       </div>
 
       <DisclaimerBanner textKey="lifestyle.disclaimer" style={{ marginBottom: '1.5rem' }} />
+
+      {/* Start with these 3 spotlight */}
+      {topThree.length > 0 && (
+        <div className="card animate-slide-up" style={{
+          marginBottom: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(15,118,110,0.06), rgba(14,165,233,0.06))',
+          border: '1px solid rgba(15,118,110,0.15)',
+        }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: '#0F766E' }}>
+            🎯 Start with these {topThree.length}
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            The most impactful, easiest changes you can make based on your results.
+          </p>
+          {topThree.map((item, i) => (
+            <div key={i} style={{
+              padding: '0.75rem 1rem',
+              background: 'var(--bg-card)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: i < topThree.length - 1 ? '0.5rem' : 0,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              border: '1px solid var(--border-color)',
+            }}>
+              <span style={{
+                width: '28px', height: '28px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0F766E, #14B8A6)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.8rem', fontWeight: 700, flexShrink: 0,
+              }}>{i + 1}</span>
+              <div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5, margin: 0 }}>
+                  {item.suggestion}
+                </p>
+                {item.source && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: '0.25rem 0 0' }}>
+                    📚 {item.source}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category} className="card animate-slide-up" style={{ marginBottom: '1rem' }}>

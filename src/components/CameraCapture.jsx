@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { compressBase64Image } from '../utils/imageCompression';
 
 export default function CameraCapture({ onCapture, onClose }) {
-  const { t } = useTranslation();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
   const [error, setError] = useState(null);
@@ -21,9 +21,13 @@ export default function CameraCapture({ onCapture, onClose }) {
       setError(null);
     } catch (err) {
       console.error('Camera error:', err);
-      setError(t('errors.camera_denied'));
+      setError(
+        err.name === 'NotAllowedError'
+          ? 'Camera access was denied. You can upload a photo from your gallery instead.'
+          : 'Camera not available on this device. You can upload a photo from your gallery instead.'
+      );
     }
-  }, [facingMode, t]);
+  }, [facingMode]);
 
   useEffect(() => {
     startCamera();
@@ -32,7 +36,7 @@ export default function CameraCapture({ onCapture, onClose }) {
     };
   }, [facingMode]);
 
-  const capture = () => {
+  const capture = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
@@ -43,7 +47,23 @@ export default function CameraCapture({ onCapture, onClose }) {
     ctx.drawImage(video, 0, 0);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    setCaptured(prev => [...prev, dataUrl]);
+
+    // Compress the captured image
+    try {
+      const compressed = await compressBase64Image(dataUrl);
+      setCaptured(prev => [...prev, {
+        preview: dataUrl,
+        data: compressed.data,
+        mediaType: compressed.mediaType,
+      }]);
+    } catch {
+      // Fallback: use uncompressed
+      setCaptured(prev => [...prev, {
+        preview: dataUrl,
+        data: dataUrl.split(',')[1],
+        mediaType: 'image/jpeg',
+      }]);
+    }
   };
 
   const switchCamera = () => {
@@ -52,10 +72,10 @@ export default function CameraCapture({ onCapture, onClose }) {
 
   const done = () => {
     if (stream) stream.getTracks().forEach(t => t.stop());
-    const images = captured.map(dataUrl => ({
-      data: dataUrl.split(',')[1],
-      mediaType: 'image/jpeg',
-      preview: dataUrl,
+    const images = captured.map(c => ({
+      data: c.data,
+      mediaType: c.mediaType,
+      preview: c.preview,
     }));
     onCapture(images);
   };
@@ -64,11 +84,84 @@ export default function CameraCapture({ onCapture, onClose }) {
     setCaptured(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Handle gallery fallback when camera is unavailable
+  const handleGallerySelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      const previewUrl = URL.createObjectURL(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        setCaptured(prev => [...prev, {
+          preview: previewUrl,
+          data: dataUrl.split(',')[1],
+          mediaType: file.type || 'image/jpeg',
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Camera error state — show gallery fallback
   if (error) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>📷 {error}</p>
-        <button className="btn btn-secondary" onClick={onClose}>Go Back</button>
+      <div style={{
+        minHeight: '60vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '2rem',
+      }}>
+        <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>📷</span>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '400px', lineHeight: 1.6 }}>
+          {error}
+        </p>
+
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleGallerySelect}
+        />
+
+        {captured.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {captured.map((c, i) => (
+              <div key={i} style={{ position: 'relative' }}>
+                <img src={c.preview} alt={`Page ${i + 1}`} style={{
+                  width: '80px', height: '100px', objectFit: 'cover', borderRadius: '8px',
+                }} />
+                <button onClick={() => removeCapture(i)} style={{
+                  position: 'absolute', top: '-6px', right: '-6px',
+                  width: '22px', height: '22px', borderRadius: '50%',
+                  background: '#FB7185', color: 'white', border: 'none',
+                  fontSize: '0.7rem', cursor: 'pointer',
+                }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button className="btn btn-primary" onClick={() => galleryInputRef.current?.click()}
+            style={{ minHeight: '44px' }}>
+            🖼️ Upload from Gallery
+          </button>
+          {captured.length > 0 && (
+            <button className="btn btn-primary" onClick={done} style={{ minHeight: '44px' }}>
+              ✓ Use {captured.length} {captured.length === 1 ? 'photo' : 'photos'}
+            </button>
+          )}
+          <button className="btn btn-secondary" onClick={onClose} style={{ minHeight: '44px' }}>
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
@@ -97,14 +190,14 @@ export default function CameraCapture({ onCapture, onClose }) {
           background: 'rgba(0,0,0,0.5)',
           borderRadius: '8px',
         }}>
-          {captured.map((img, i) => (
+          {captured.map((c, i) => (
             <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
-              <img src={img} alt={`Page ${i + 1}`} style={{
+              <img src={c.preview} alt={`Page ${i + 1}`} style={{
                 width: '60px', height: '80px', objectFit: 'cover', borderRadius: '4px',
               }} />
               <button onClick={() => removeCapture(i)} style={{
                 position: 'absolute', top: '-4px', right: '-4px',
-                width: '20px', height: '20px', borderRadius: '50%',
+                width: '22px', height: '22px', borderRadius: '50%',
                 background: '#FB7185', color: 'white', border: 'none',
                 fontSize: '0.7rem', cursor: 'pointer',
               }}>✕</button>
@@ -124,11 +217,13 @@ export default function CameraCapture({ onCapture, onClose }) {
       }}>
         <button onClick={onClose} style={{
           background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
-          width: '50px', height: '50px', color: 'white', fontSize: '1.5rem', cursor: 'pointer',
+          width: '50px', height: '50px', minWidth: '50px', minHeight: '50px',
+          color: 'white', fontSize: '1.5rem', cursor: 'pointer',
         }}>✕</button>
 
         <button onClick={capture} style={{
-          width: '70px', height: '70px', borderRadius: '50%',
+          width: '70px', height: '70px', minWidth: '70px', minHeight: '70px',
+          borderRadius: '50%',
           border: '4px solid white', background: 'rgba(255,255,255,0.2)',
           cursor: 'pointer',
         }}>
@@ -140,7 +235,8 @@ export default function CameraCapture({ onCapture, onClose }) {
 
         <button onClick={switchCamera} style={{
           background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
-          width: '50px', height: '50px', color: 'white', fontSize: '1.25rem', cursor: 'pointer',
+          width: '50px', height: '50px', minWidth: '50px', minHeight: '50px',
+          color: 'white', fontSize: '1.25rem', cursor: 'pointer',
         }}>🔄</button>
       </div>
 
@@ -148,6 +244,7 @@ export default function CameraCapture({ onCapture, onClose }) {
         <button onClick={done} className="btn btn-primary" style={{
           position: 'absolute', bottom: '7rem', right: '1rem',
           padding: '0.5rem 1rem',
+          minHeight: '44px',
         }}>
           ✓ Done ({captured.length} {captured.length === 1 ? 'page' : 'pages'})
         </button>

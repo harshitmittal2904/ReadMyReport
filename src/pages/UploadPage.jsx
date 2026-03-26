@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import CameraCapture from '../components/CameraCapture';
-import { processPDF, processImages, processImage } from '../services/pdfService';
+import { processPDF, processImages } from '../services/pdfService';
 
 export default function UploadPage() {
   const { t } = useTranslation();
@@ -15,10 +15,12 @@ export default function UploadPage() {
   const [processing, setProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadMode, setUploadMode] = useState(null); // 'pdf' | 'image' | 'camera'
+  const [error, setError] = useState(null);
 
   const handlePDFSelect = async (selectedFiles) => {
+    setError(null);
     const fileList = Array.from(selectedFiles);
-    const pdfFile = fileList.find(f => f.type === 'application/pdf');
+    const pdfFile = fileList.find(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
     if (pdfFile) {
       setFiles([pdfFile]);
       setPreviews([{ name: pdfFile.name, type: 'pdf', size: (pdfFile.size / 1024).toFixed(1) + ' KB' }]);
@@ -27,8 +29,10 @@ export default function UploadPage() {
   };
 
   const handleImageSelect = async (selectedFiles) => {
+    setError(null);
     const fileList = Array.from(selectedFiles);
     const imageFiles = fileList.filter(f => f.type.startsWith('image/') || f.name.toLowerCase().endsWith('.heic'));
+    if (imageFiles.length === 0) return;
     const newPreviews = [];
     for (const file of imageFiles) {
       const url = URL.createObjectURL(file);
@@ -41,6 +45,8 @@ export default function UploadPage() {
 
   const handleCameraCapture = (capturedImages) => {
     setShowCamera(false);
+    setError(null);
+    if (!capturedImages || capturedImages.length === 0) return;
     const newPreviews = capturedImages.map((img, i) => ({
       name: `Camera page ${previews.length + i + 1}`,
       type: 'camera',
@@ -50,6 +56,20 @@ export default function UploadPage() {
     }));
     setPreviews(prev => [...prev, ...newPreviews]);
     setUploadMode('camera');
+  };
+
+  const handleFileInput = (e) => {
+    const selected = e.target.files;
+    if (!selected || selected.length === 0) return;
+    // Check if first file is PDF (by type or extension for mobile compatibility)
+    const first = selected[0];
+    if (first.type === 'application/pdf' || first.name.toLowerCase().endsWith('.pdf')) {
+      handlePDFSelect(selected);
+    } else {
+      handleImageSelect(selected);
+    }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
   };
 
   const handleDrop = (e) => {
@@ -66,27 +86,82 @@ export default function UploadPage() {
   const removePreview = (idx) => {
     setPreviews(prev => prev.filter((_, i) => i !== idx));
     setFiles(prev => prev.filter((_, i) => i !== idx));
-    if (previews.length <= 1) setUploadMode(null);
+    if (previews.length <= 1) {
+      setUploadMode(null);
+      setError(null);
+    }
   };
 
   const handleAnalyze = async () => {
+    if (processing) return; // Prevent double-click
+
+    // Offline check
+    if (!navigator.onLine) {
+      setError('You appear to be offline. Please check your internet connection and try again.');
+      return;
+    }
+
     setProcessing(true);
+    setError(null);
+
     try {
       let content;
+
       if (uploadMode === 'pdf' && files[0]) {
         content = await processPDF(files[0]);
       } else if (uploadMode === 'camera') {
-        const images = previews.map(p => ({ data: p.data, mediaType: p.mediaType }));
+        const images = previews
+          .filter(p => p.data)
+          .map(p => ({ data: p.data, mediaType: p.mediaType }));
+        if (images.length === 0) {
+          throw new Error('NO_IMAGES');
+        }
         content = { images, mode: 'vision' };
-      } else if (uploadMode === 'image') {
+      } else if (uploadMode === 'image' && files.length > 0) {
         content = await processImages(files);
+      } else {
+        throw new Error('NO_CONTENT');
       }
-      // Store processed content and navigate directly to analyzing
-      sessionStorage.setItem('ld-upload-content', JSON.stringify(content));
-      navigate('/analyzing');
-    } catch (error) {
-      console.error('Processing error:', error);
+
+      // Validate content was created
+      if (!content || (!content.text && (!content.images || content.images.length === 0))) {
+        throw new Error('EMPTY_CONTENT');
+      }
+
+      // Try to store in sessionStorage (can fail if content too large)
+      try {
+        const contentStr = JSON.stringify(content);
+        sessionStorage.setItem('ld-upload-content', contentStr);
+      } catch (storageErr) {
+        console.error('sessionStorage error:', storageErr);
+        throw new Error('STORAGE_FULL');
+      }
+
+      navigate('/pre-analysis');
+    } catch (err) {
+      console.error('Processing error:', err);
       setProcessing(false);
+
+      // Show user-friendly error messages
+      switch (err.message) {
+        case 'ENCRYPTED_PDF':
+          setError('This PDF is password-protected. Please upload an unprotected version of your report.');
+          break;
+        case 'PDF_UNREADABLE':
+          setError("We couldn't read your PDF. Try uploading a higher-quality scan or take a photo of each page instead.");
+          break;
+        case 'STORAGE_FULL':
+          setError('Your report is too large to process. Try uploading fewer pages or a lower-resolution image.');
+          break;
+        case 'NO_IMAGES':
+        case 'NO_CONTENT':
+        case 'EMPTY_CONTENT':
+          setError('No content found to analyze. Please upload your report again.');
+          break;
+        default:
+          setError("Something went wrong while processing your report. Please try again, or use a different file format.");
+          break;
+      }
     }
   };
 
@@ -101,6 +176,38 @@ export default function UploadPage() {
         <p style={{ color: 'var(--text-secondary)' }}>{t('upload.subtitle')}</p>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="animate-fade-in" style={{
+          background: 'linear-gradient(135deg, #FEF2F2, #FECACA)',
+          border: '1px solid #F87171',
+          borderRadius: 'var(--radius-sm)',
+          padding: '1rem 1.25rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.625rem',
+          fontSize: '0.9rem',
+          color: '#991B1B',
+          lineHeight: 1.5,
+        }}>
+          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>&#x26A0;&#xFE0F;</span>
+          <div>
+            <p style={{ margin: 0 }}>{error}</p>
+            <button
+              onClick={() => setError(null)}
+              style={{
+                background: 'none', border: 'none', color: '#DC2626',
+                fontWeight: 600, cursor: 'pointer', padding: '0.25rem 0',
+                fontSize: '0.85rem', marginTop: '0.25rem',
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Upload Options */}
       {previews.length === 0 ? (
         <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -114,11 +221,16 @@ export default function UploadPage() {
               border: `2px dashed ${dragActive ? '#0F766E' : 'var(--border-color)'}`,
               borderRadius: 'var(--radius)',
               padding: '3rem 2rem',
+              minHeight: '30vh',
               textAlign: 'center',
               cursor: 'pointer',
               background: dragActive ? 'rgba(15,118,110,0.05)' : 'var(--bg-card)',
               transition: 'all 0.2s ease',
               marginBottom: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>📄</span>
@@ -131,13 +243,10 @@ export default function UploadPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.heic"
+            accept=".pdf,.jpg,.jpeg,.png,.heic,application/pdf,image/*"
             multiple
             style={{ display: 'none' }}
-            onChange={e => {
-              if (e.target.files[0]?.type === 'application/pdf') handlePDFSelect(e.target.files);
-              else handleImageSelect(e.target.files);
-            }}
+            onChange={handleFileInput}
           />
           <input
             ref={imageInputRef}
@@ -145,7 +254,7 @@ export default function UploadPage() {
             accept="image/*"
             multiple
             style={{ display: 'none' }}
-            onChange={e => handleImageSelect(e.target.files)}
+            onChange={e => { handleImageSelect(e.target.files); e.target.value = ''; }}
           />
 
           {/* Option Cards */}
@@ -154,21 +263,24 @@ export default function UploadPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '1rem',
           }}>
-            <div className="card card-interactive" onClick={() => fileInputRef.current?.click()}>
+            <div className="card card-interactive" onClick={() => fileInputRef.current?.click()}
+              style={{ minHeight: '100px' }}>
               <div style={{ textAlign: 'center', padding: '0.5rem' }}>
                 <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📋</span>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>{t('upload.pdf_title')}</h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('upload.pdf_desc')}</p>
               </div>
             </div>
-            <div className="card card-interactive" onClick={() => setShowCamera(true)}>
+            <div className="card card-interactive" onClick={() => setShowCamera(true)}
+              style={{ minHeight: '100px' }}>
               <div style={{ textAlign: 'center', padding: '0.5rem' }}>
                 <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📸</span>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>{t('upload.camera_title')}</h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('upload.camera_desc')}</p>
               </div>
             </div>
-            <div className="card card-interactive" onClick={() => imageInputRef.current?.click()}>
+            <div className="card card-interactive" onClick={() => imageInputRef.current?.click()}
+              style={{ minHeight: '100px' }}>
               <div style={{ textAlign: 'center', padding: '0.5rem' }}>
                 <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>🖼️</span>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>{t('upload.image_title')}</h3>
@@ -200,7 +312,7 @@ export default function UploadPage() {
                     borderRadius: 'var(--radius-sm)',
                   }}>
                     <span style={{ fontSize: '2.5rem' }}>📄</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{preview.name}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', textAlign: 'center', wordBreak: 'break-all', padding: '0 0.25rem' }}>{preview.name}</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{preview.size}</span>
                   </div>
                 ) : (
@@ -217,10 +329,11 @@ export default function UploadPage() {
                 )}
                 <button onClick={() => removePreview(i)} style={{
                   position: 'absolute', top: '4px', right: '4px',
-                  width: '24px', height: '24px', borderRadius: '50%',
+                  width: '28px', height: '28px', borderRadius: '50%',
                   background: '#FB7185', color: 'white', border: 'none',
                   cursor: 'pointer', fontSize: '0.75rem',
-                }}>✕</button>
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>&#x2715;</button>
               </div>
             ))}
           </div>
@@ -240,12 +353,17 @@ export default function UploadPage() {
               className="btn btn-primary"
               onClick={handleAnalyze}
               disabled={processing}
-              style={{ minWidth: '200px' }}
+              style={{
+                minWidth: '200px',
+                minHeight: '48px',
+                opacity: processing ? 0.7 : 1,
+                pointerEvents: processing ? 'none' : 'auto',
+              }}
             >
               {processing ? (
                 <span className="animate-pulse">Processing...</span>
               ) : (
-                <>✨ {t('upload.looks_good')}</>
+                <>&#x2728; {t('upload.looks_good')}</>
               )}
             </button>
           </div>

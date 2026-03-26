@@ -6,7 +6,8 @@
     "upload": "Upload Report",
     "history": "My Reports",
     "compare": "Compare",
-    "settings": "Settings"
+    "settings": "Settings",
+    "glossary": "Glossary"
   },
   "landing": {
     "hero_title": "Your Lab Reports,",
@@ -60,7 +61,19 @@
     "conditions_placeholder": "e.g., Diabetes, Thyroid disorder",
     "skip": "Skip",
     "continue": "Continue",
-    "note": "Providing your age and sex helps us give more accurate context"
+    "note": "Providing your age and sex helps us give more accurate context",
+    "age_range": "Age Range",
+    "biological_sex": "Biological Sex",
+    "sex_male": "Male",
+    "sex_female": "Female",
+    "sex_prefer_not_to_say": "Prefer not to say",
+    "condition_diabetes": "Diabetes",
+    "condition_thyroid": "Thyroid",
+    "condition_heart": "Heart Disease",
+    "condition_kidney": "Kidney",
+    "condition_anemia": "Anemia",
+    "condition_none": "None",
+    "skip_note": "No problem! Your results will use standard reference ranges. You can always re-upload with context later for more personalized analysis."
   },
   "analyzing": {
     "reading": "Reading your report...",

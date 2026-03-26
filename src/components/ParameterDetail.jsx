@@ -140,9 +140,9 @@ export default function ParameterDetail({ parameter, simple = false }) {
           {p.status === 'review_recommended' && (
             <DisclaimerBanner textKey="disclaimers.critical_value" style={{ marginTop: '0.75rem' }} />
           )}
-          {p.status === 'review_recommended' && (
+          {p.status === 'review_recommended' && p.specialist && (
             <a
-              href={`https://www.google.com/maps/search/doctor+near+me`}
+              href={`https://www.google.com/maps/search/${encodeURIComponent(p.specialist)}+near+me`}
               target="_blank"
               rel="noopener noreferrer"
               style={{

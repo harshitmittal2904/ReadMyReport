@@ -41,16 +41,19 @@ export default function AnalyzingPage() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error('Analysis failed:', err);
-      if (err.message === 'NO_API_KEY') {
-        setError(t('errors.no_api_key'));
-      } else if (err.message === 'RATE_LIMITED') {
-        setError(t('errors.rate_limit'));
-      } else {
-        setError(t('errors.analysis_failed'));
-      }
+      const errorMessages = {
+        'NO_API_KEY': t('errors.no_api_key'),
+        'RATE_LIMITED': t('errors.rate_limit'),
+        'HOURLY_LIMIT': "You've reached the maximum number of analyses for this hour. Please try again later.",
+        'OFFLINE': 'You appear to be offline. Please check your internet connection and try again.',
+        'TIMEOUT': 'The analysis is taking longer than expected. This can happen with large or complex reports. Please try again.',
+        'EMPTY_RESPONSE': "We couldn't extract any parameters from this report. Please verify it's a lab test report and try again.",
+        'NOT_LAB_REPORT': "This doesn't appear to be a medical lab report, or we couldn't find any test parameters in it. Please upload a lab test report.",
+        'PARSE_ERROR': 'We had trouble reading the AI response. Please try again.',
+      };
+      setError(errorMessages[err.message] || t('errors.analysis_failed'));
     }
   };
-
 
   return (
     <div style={{
@@ -63,17 +66,31 @@ export default function AnalyzingPage() {
     }}>
       {error ? (
         <div className="animate-fade-in" style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>😔</span>
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>{error}</p>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>&#x1F614;</span>
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{error}</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => navigate('/upload')}>Try Again</button>
+            <button className="btn btn-primary" onClick={() => navigate('/upload')}>
+              Upload Again
+            </button>
+            <button className="btn btn-secondary" onClick={() => {
+              setError(null);
+              setStep(0);
+              hasStarted.current = false;
+              // Re-trigger analysis
+              const interval = setInterval(() => {
+                setStep(prev => (prev < STEPS.length - 1 ? prev + 1 : prev));
+              }, 2500);
+              runAnalysis().finally(() => clearInterval(interval));
+            }}>
+              Retry
+            </button>
           </div>
         </div>
       ) : (
         <div className="animate-fade-in" style={{ textAlign: 'center' }}>
           {/* Animated DNA helix */}
           <div style={{ marginBottom: '2rem', fontSize: '4rem' }}>
-            <span className="animate-spin" style={{ display: 'inline-block' }}>🧬</span>
+            <span className="animate-spin" style={{ display: 'inline-block' }}>&#x1F9EC;</span>
           </div>
 
           {/* Progress steps */}
@@ -103,6 +120,7 @@ export default function AnalyzingPage() {
           {/* Progress bar */}
           <div style={{
             width: '300px',
+            maxWidth: '80vw',
             height: '4px',
             background: 'var(--bg-secondary)',
             borderRadius: '2px',
@@ -117,6 +135,14 @@ export default function AnalyzingPage() {
               transition: 'width 0.5s ease',
             }} />
           </div>
+
+          <p style={{
+            marginTop: '1.5rem',
+            fontSize: '0.85rem',
+            color: 'var(--text-muted)',
+          }}>
+            This usually takes 15–30 seconds
+          </p>
         </div>
       )}
     </div>

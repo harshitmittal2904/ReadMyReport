@@ -1,5 +1,3 @@
-// import { getApiKey } from '../utils/storage';
-
 const SYSTEM_PROMPT = `You are LabDecode's medical report analysis engine. Your role is to READ lab reports, EXTRACT values, CATEGORIZE them, and EXPLAIN them in plain language.
 
 YOU ARE NOT A DOCTOR. You do not diagnose. You do not predict diseases. You do not prescribe treatment.
@@ -76,19 +74,61 @@ Return ONLY a valid JSON response (no markdown fences, no extra text) with this 
 
 let lastCallTime = 0;
 const RATE_LIMIT_MS = 30000;
+const API_TIMEOUT_MS = 45000; // 45 second timeout
+
+// Hourly rate limiting
+const HOURLY_LIMIT = 20;
+const HOURLY_KEY = 'ld-hourly-count';
+
+function getHourlyCount() {
+  try {
+    const data = JSON.parse(localStorage.getItem(HOURLY_KEY) || '{}');
+    const now = Date.now();
+    // Reset if more than 1 hour old
+    if (!data.timestamp || now - data.timestamp > 3600000) {
+      return { count: 0, timestamp: now };
+    }
+    return data;
+  } catch {
+    return { count: 0, timestamp: Date.now() };
+  }
+}
+
+function incrementHourlyCount() {
+  const data = getHourlyCount();
+  data.count += 1;
+  if (!data.timestamp) data.timestamp = Date.now();
+  try {
+    localStorage.setItem(HOURLY_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
 
 export async function analyzeReport(content, userContext = {}) {
-    // API key is handled securely by the backend proxy using process.env
+  // Offline check
+  if (!navigator.onLine) {
+    throw new Error('OFFLINE');
+  }
 
+  // Per-call rate limit (30s cooldown)
   const now = Date.now();
   if (now - lastCallTime < RATE_LIMIT_MS) {
     throw new Error('RATE_LIMITED');
   }
+
+  // Hourly rate limit
+  const hourly = getHourlyCount();
+  if (hourly.count >= HOURLY_LIMIT) {
+    throw new Error('HOURLY_LIMIT');
+  }
+
   lastCallTime = now;
 
   const contents = buildMessages(content, userContext);
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
@@ -100,21 +140,29 @@ export async function analyzeReport(content, userContext = {}) {
           responseMimeType: "application/json"
         }
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errBody = await response.text();
       console.error('API error:', response.status, errBody);
+      if (response.status === 429) throw new Error('RATE_LIMITED');
+      if (response.status === 504) throw new Error('TIMEOUT');
       throw new Error('API_ERROR');
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
+    if (!text.trim()) {
+      throw new Error('EMPTY_RESPONSE');
+    }
+
     // Parse JSON from response
     let parsed;
     try {
-      // Try to extract JSON from potential markdown fences
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       parsed = JSON.parse(jsonMatch ? jsonMatch[1].trim() : text.trim());
     } catch (e) {
@@ -122,9 +170,21 @@ export async function analyzeReport(content, userContext = {}) {
       throw new Error('PARSE_ERROR');
     }
 
+    // Validate the response has parameters
+    if (!parsed.parameters || parsed.parameters.length === 0) {
+      throw new Error('NOT_LAB_REPORT');
+    }
+
+    incrementHourlyCount();
     return parsed;
   } catch (error) {
-    if (['NO_API_KEY', 'RATE_LIMITED', 'PARSE_ERROR', 'API_ERROR'].includes(error.message)) {
+    if (error.name === 'AbortError') {
+      throw new Error('TIMEOUT');
+    }
+    if ([
+      'NO_API_KEY', 'RATE_LIMITED', 'HOURLY_LIMIT', 'PARSE_ERROR',
+      'API_ERROR', 'OFFLINE', 'TIMEOUT', 'EMPTY_RESPONSE', 'NOT_LAB_REPORT'
+    ].includes(error.message)) {
       throw error;
     }
     console.error('Analysis error:', error);
@@ -134,6 +194,16 @@ export async function analyzeReport(content, userContext = {}) {
 
 function buildMessages(content, userContext) {
   let userPrompt = SYSTEM_PROMPT + '\n\n';
+
+  // Add user context if provided
+  if (userContext.age || userContext.sex) {
+    userPrompt += 'PATIENT CONTEXT (provided by user):\n';
+    if (userContext.age) userPrompt += `Age: ${userContext.age}\n`;
+    if (userContext.sex) userPrompt += `Biological Sex: ${userContext.sex}\n`;
+    if (userContext.pregnant) userPrompt += 'Currently pregnant: Yes\n';
+    if (userContext.conditions) userPrompt += `Known conditions: ${userContext.conditions}\n`;
+    userPrompt += 'Use this context to adjust reference ranges accordingly.\n\n';
+  }
 
   userPrompt += 'Please analyze the following lab report. First, explicitly identify the patient Age and Biological Sex from the report if present. Use these to adjust the reference ranges for each parameter. If not found, default to standard adult ranges. Return the structured JSON response:\n\n';
 
@@ -159,6 +229,3 @@ function buildMessages(content, userContext) {
 
   return [{ role: 'user', parts: [{ text: userPrompt }] }];
 }
-
-// Demo/sample data for testing without API
-
