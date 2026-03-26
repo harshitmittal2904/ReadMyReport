@@ -17,7 +17,6 @@ const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 const GlossaryPage = lazy(() => import('./pages/GlossaryPage'));
-const PreAnalysisPage = lazy(() => import('./pages/PreAnalysisPage'));
 
 function PageLoader() {
   return (
@@ -40,7 +39,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/upload" element={<UploadPage />} />
-              <Route path="/pre-analysis" element={<PreAnalysisPage />} />
               <Route path="/analyzing" element={<AnalyzingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/lifestyle" element={<LifestylePage />} />

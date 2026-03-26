@@ -137,7 +137,7 @@ export default function UploadPage() {
         throw new Error('STORAGE_FULL');
       }
 
-      navigate('/pre-analysis');
+      navigate('/analyzing');
     } catch (err) {
       console.error('Processing error:', err);
       setProcessing(false);
