@@ -50,6 +50,8 @@ export default function AnalyzingPage() {
         'EMPTY_RESPONSE': "We couldn't extract any parameters from this report. Please verify it's a lab test report and try again.",
         'NOT_LAB_REPORT': "This doesn't appear to be a medical lab report, or we couldn't find any test parameters in it. Please upload a lab test report.",
         'PARSE_ERROR': 'We had trouble reading the AI response. Please try again.',
+        'API_ERROR': 'The analysis service returned an error. Please try again. If the problem persists, the report may be too large or in an unsupported format.',
+        'NETWORK_ERROR': 'Unable to connect to the analysis service. Please check your internet connection and try again.',
       };
       setError(errorMessages[err.message] || t('errors.analysis_failed'));
     }

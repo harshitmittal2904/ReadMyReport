@@ -1,20 +1,36 @@
 // Vercel serverless function: proxies requests to the Gemini API
 // Hardened with validation, CORS, rate limiting, and security headers
 
-const ALLOWED_ORIGINS = [
-  'https://read-my-report.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:4173',
-];
-
 const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024; // 10MB
-const TIMEOUT_MS = 30000; // 30 seconds
+const TIMEOUT_MS = 55000; // 55 seconds (5s buffer before maxDuration limit)
+
+// Tell Vercel this function needs up to 60s (requires Pro plan; Hobby max is 10s)
+export const config = {
+  maxDuration: 60,
+};
+
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  // Production domain
+  if (origin === 'https://read-my-report.vercel.app') return true;
+  // Vercel preview deployments (*.vercel.app)
+  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true;
+  // Local development
+  if (/^http:\/\/localhost:\d+$/.test(origin)) return true;
+  return false;
+}
 
 export default async function handler(req, res) {
-  // CORS headers
   const origin = req.headers.origin || '';
-  const isAllowed = ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === 'development';
-  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : ALLOWED_ORIGINS[0]);
+  const allowed = isAllowedOrigin(origin);
+
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', allowed ? origin : 'https://read-my-report.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Max-Age', '86400');
@@ -62,8 +78,17 @@ export default async function handler(req, res) {
 
     clearTimeout(timeout);
 
-    const data = await response.json();
-    res.status(response.status).json(data);
+    // Validate Gemini responded with JSON before forwarding
+    const responseContentType = response.headers.get('content-type') || '';
+    if (responseContentType.includes('application/json')) {
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } else {
+      // Gemini returned non-JSON (HTML error page, etc.) — don't forward raw content
+      const text = await response.text();
+      console.error('Gemini returned non-JSON:', response.status, text.substring(0, 200));
+      res.status(502).json({ error: 'Unexpected response from analysis service' });
+    }
   } catch (error) {
     if (error.name === 'AbortError') {
       return res.status(504).json({ error: 'Analysis timed out. Please try again with a clearer or smaller image.' });

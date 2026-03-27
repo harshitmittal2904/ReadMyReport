@@ -74,7 +74,7 @@ Return ONLY a valid JSON response (no markdown fences, no extra text) with this 
 
 let lastCallTime = 0;
 const RATE_LIMIT_MS = 30000;
-const API_TIMEOUT_MS = 45000; // 45 second timeout
+const API_TIMEOUT_MS = 65000; // 65s timeout (must exceed server's 55s to get proper 504)
 
 // Hourly rate limiting
 const HOURLY_LIMIT = 20;
@@ -181,9 +181,14 @@ export async function analyzeReport(content, userContext = {}) {
     if (error.name === 'AbortError') {
       throw new Error('TIMEOUT');
     }
+    // Detect CORS / network failures (fetch throws TypeError, not HTTP status)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network/CORS error:', error.message);
+      throw new Error('NETWORK_ERROR');
+    }
     if ([
       'NO_API_KEY', 'RATE_LIMITED', 'HOURLY_LIMIT', 'PARSE_ERROR',
-      'API_ERROR', 'OFFLINE', 'TIMEOUT', 'EMPTY_RESPONSE', 'NOT_LAB_REPORT'
+      'API_ERROR', 'OFFLINE', 'TIMEOUT', 'EMPTY_RESPONSE', 'NOT_LAB_REPORT', 'NETWORK_ERROR'
     ].includes(error.message)) {
       throw error;
     }

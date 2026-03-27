@@ -7,16 +7,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'https://api.anthropic.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/analyze/, '/v1/messages'),
-        headers: {
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-      },
-    },
-  },
+  // For local development with /api routes, use `vercel dev` instead of `npm run dev`.
+  // The Vercel CLI runs serverless functions locally and handles /api/* routing.
 })

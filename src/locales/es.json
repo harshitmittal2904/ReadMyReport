@@ -77,6 +77,6 @@
   },
   "errors": {
     "analysis_failed": "Estamos teniendo problemas para analizar tu informe. Por favor intenta de nuevo en un momento.",
-    "no_api_key": "Por favor agrega tu clave API de Anthropic en Configuración para analizar informes."
+    "no_api_key": "El servidor no tiene configurada la clave API. Por favor contacta al administrador."
   }
 }
