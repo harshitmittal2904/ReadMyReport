@@ -2,11 +2,12 @@
 // Hardened with validation, CORS, rate limiting, and security headers
 
 const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024; // 10MB
-const TIMEOUT_MS = 55000; // 55 seconds (5s buffer before maxDuration limit)
+// Gemini 2.0 Flash responds in 3-8s. We set 9s to fit within Vercel Hobby's 10s hard limit.
+const TIMEOUT_MS = 9000;
 
-// Tell Vercel this function needs up to 60s (requires Pro plan; Hobby max is 10s)
+// Vercel Hobby plan max is 10s. Pro plan could set this higher.
 export const config = {
-  maxDuration: 60,
+  maxDuration: 10,
 };
 
 function isAllowedOrigin(origin) {
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

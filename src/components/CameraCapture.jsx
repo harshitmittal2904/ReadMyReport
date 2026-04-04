@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { compressBase64Image } from '../utils/imageCompression';
+import { compressImageToTarget, calculatePerImageBudget } from '../utils/imageCompression';
 
 export default function CameraCapture({ onCapture, onClose }) {
   const videoRef = useRef(null);
@@ -48,9 +48,10 @@ export default function CameraCapture({ onCapture, onClose }) {
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
-    // Compress the captured image
+    // Adaptive compression: budget accounts for existing + new capture
+    const budget = calculatePerImageBudget(captured.length + 1);
     try {
-      const compressed = await compressBase64Image(dataUrl);
+      const compressed = await compressImageToTarget(dataUrl, budget);
       setCaptured(prev => [...prev, {
         preview: dataUrl,
         data: compressed.data,
@@ -85,22 +86,37 @@ export default function CameraCapture({ onCapture, onClose }) {
   };
 
   // Handle gallery fallback when camera is unavailable
-  const handleGallerySelect = (e) => {
+  const handleGallerySelect = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     for (const file of files) {
       const previewUrl = URL.createObjectURL(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result;
+      // Compress gallery images with adaptive budget (same as camera captures)
+      const budget = calculatePerImageBudget(captured.length + 1);
+      try {
+        const compressed = await compressImageToTarget(file, budget);
         setCaptured(prev => [...prev, {
           preview: previewUrl,
-          data: dataUrl.split(',')[1],
-          mediaType: file.type || 'image/jpeg',
+          data: compressed.data,
+          mediaType: compressed.mediaType,
         }]);
-      };
-      reader.readAsDataURL(file);
+      } catch {
+        // Fallback: read raw file if compression fails
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        });
+        if (dataUrl) {
+          setCaptured(prev => [...prev, {
+            preview: previewUrl,
+            data: dataUrl.split(',')[1],
+            mediaType: file.type || 'image/jpeg',
+          }]);
+        }
+      }
     }
   };
 

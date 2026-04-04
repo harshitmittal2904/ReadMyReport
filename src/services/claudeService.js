@@ -74,7 +74,7 @@ Return ONLY a valid JSON response (no markdown fences, no extra text) with this 
 
 let lastCallTime = 0;
 const RATE_LIMIT_MS = 30000;
-const API_TIMEOUT_MS = 65000; // 65s timeout (must exceed server's 55s to get proper 504)
+const API_TIMEOUT_MS = 12000; // 12s timeout — server aborts at 9s, so client sees 504 before this fires
 
 // Hourly rate limiting
 const HOURLY_LIMIT = 20;

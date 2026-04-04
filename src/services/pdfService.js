@@ -1,10 +1,11 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import { compressImageFile } from '../utils/imageCompression';
+import { compressImageToTarget, calculatePerImageBudget } from '../utils/imageCompression';
 
 // Set up the PDF.js worker — copied from node_modules/pdfjs-dist/build/ to public/
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const MAX_RENDER_DIMENSION = 1500;
+const MAX_VISION_PAGES = 10;
 
 /**
  * Extract text from a PDF file. If text extraction yields little content,
@@ -45,11 +46,14 @@ export async function processPDF(file) {
   }
 
   // Fallback: render pages as images for Vision API
+  const pagesToRender = Math.min(numPages, MAX_VISION_PAGES);
+  const perPageBudget = calculatePerImageBudget(pagesToRender);
+
   // Use lower scale on mobile to prevent memory crashes
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const images = [];
 
-  for (let i = 1; i <= numPages; i++) {
+  for (let i = 1; i <= pagesToRender; i++) {
     try {
       const page = await pdf.getPage(i);
       const defaultViewport = page.getViewport({ scale: 1.0 });
@@ -68,13 +72,15 @@ export async function processPDF(file) {
 
       await page.render({ canvasContext: ctx, viewport }).promise;
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      const base64 = dataUrl.split(',')[1];
-      images.push({ data: base64, mediaType: 'image/jpeg' });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
       // Release canvas memory immediately
       canvas.width = 0;
       canvas.height = 0;
+
+      // Compress to fit within per-page budget
+      const compressed = await compressImageToTarget(dataUrl, perPageBudget);
+      images.push(compressed);
     } catch (err) {
       console.warn(`Failed to render PDF page ${i}:`, err.message);
       // Continue with other pages rather than failing entirely
@@ -85,16 +91,21 @@ export async function processPDF(file) {
     throw new Error('PDF_UNREADABLE');
   }
 
-  return { images, mode: 'vision' };
+  return {
+    images,
+    mode: 'vision',
+    truncated: numPages > MAX_VISION_PAGES ? numPages : undefined,
+  };
 }
 
 /**
  * Convert an image File to compressed base64 for the Vision API.
- * Resizes to max 1500px and compresses to JPEG.
+ * Uses adaptive budget based on being the sole image.
  */
-export async function processImage(file) {
+export async function processImage(file, targetBytes) {
+  const budget = targetBytes || calculatePerImageBudget(1);
   try {
-    return await compressImageFile(file);
+    return await compressImageToTarget(file, budget);
   } catch {
     // Fallback to raw FileReader if compression fails
     return new Promise((resolve, reject) => {
@@ -112,9 +123,18 @@ export async function processImage(file) {
 }
 
 /**
- * Process multiple image files with compression
+ * Process multiple image files with adaptive compression.
+ * Caps at 10 images and budgets per-image to stay within sessionStorage limits.
  */
 export async function processImages(files) {
-  const images = await Promise.all(Array.from(files).map(processImage));
-  return { images, mode: 'vision' };
+  const fileArray = Array.from(files).slice(0, MAX_VISION_PAGES);
+  const perImageBudget = calculatePerImageBudget(fileArray.length);
+  const images = await Promise.all(
+    fileArray.map(f => processImage(f, perImageBudget))
+  );
+  return {
+    images,
+    mode: 'vision',
+    truncated: files.length > MAX_VISION_PAGES ? files.length : undefined,
+  };
 }

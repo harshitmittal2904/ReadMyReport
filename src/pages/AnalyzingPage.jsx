@@ -46,7 +46,7 @@ export default function AnalyzingPage() {
         'RATE_LIMITED': t('errors.rate_limit'),
         'HOURLY_LIMIT': "You've reached the maximum number of analyses for this hour. Please try again later.",
         'OFFLINE': 'You appear to be offline. Please check your internet connection and try again.',
-        'TIMEOUT': 'The analysis is taking longer than expected. This can happen with large or complex reports. Please try again.',
+        'TIMEOUT': 'The analysis timed out. Please try again — this usually resolves on retry. If it persists, try uploading a clearer or smaller image.',
         'EMPTY_RESPONSE': "We couldn't extract any parameters from this report. Please verify it's a lab test report and try again.",
         'NOT_LAB_REPORT': "This doesn't appear to be a medical lab report, or we couldn't find any test parameters in it. Please upload a lab test report.",
         'PARSE_ERROR': 'We had trouble reading the AI response. Please try again.',
@@ -143,7 +143,7 @@ export default function AnalyzingPage() {
             fontSize: '0.85rem',
             color: 'var(--text-muted)',
           }}>
-            This usually takes 15–30 seconds
+            This usually takes 5–10 seconds
           </p>
         </div>
       )}

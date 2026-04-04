@@ -4,6 +4,10 @@ import { useTranslation } from 'react-i18next';
 import CameraCapture from '../components/CameraCapture';
 import { processPDF, processImages } from '../services/pdfService';
 
+const MAX_FILE_SIZE_HARD = 50 * 1024 * 1024; // 50MB hard reject
+const MAX_FILE_SIZE_WARN = 20 * 1024 * 1024; // 20MB warning
+const MAX_STORAGE_BYTES = 4_500_000; // 4.5MB sessionStorage safety limit
+
 export default function UploadPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -16,12 +20,29 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadMode, setUploadMode] = useState(null); // 'pdf' | 'image' | 'camera'
   const [error, setError] = useState(null);
+  const [sizeWarning, setSizeWarning] = useState(null);
+
+  const validateFileSize = (file) => {
+    if (file.size > MAX_FILE_SIZE_HARD) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      setError(`This file is too large (${sizeMB} MB). Please use a smaller file or scan with lower resolution. Maximum: 50 MB.`);
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE_WARN) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      setSizeWarning(`This is a large file (${sizeMB} MB). Processing may take longer and compression will be applied.`);
+    } else {
+      setSizeWarning(null);
+    }
+    return true;
+  };
 
   const handlePDFSelect = async (selectedFiles) => {
     setError(null);
     const fileList = Array.from(selectedFiles);
     const pdfFile = fileList.find(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
     if (pdfFile) {
+      if (!validateFileSize(pdfFile)) return;
       setFiles([pdfFile]);
       setPreviews([{ name: pdfFile.name, type: 'pdf', size: (pdfFile.size / 1024).toFixed(1) + ' KB' }]);
       setUploadMode('pdf');
@@ -33,6 +54,10 @@ export default function UploadPage() {
     const fileList = Array.from(selectedFiles);
     const imageFiles = fileList.filter(f => f.type.startsWith('image/') || f.name.toLowerCase().endsWith('.heic'));
     if (imageFiles.length === 0) return;
+    // Validate each file size
+    for (const file of imageFiles) {
+      if (!validateFileSize(file)) return;
+    }
     const newPreviews = [];
     for (const file of imageFiles) {
       const url = URL.createObjectURL(file);
@@ -107,8 +132,18 @@ export default function UploadPage() {
     try {
       let content;
 
+      // Wrap processing in a timeout to prevent hanging on mobile
+      const processWithTimeout = (promise) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('PROCESSING_TIMEOUT')), 30000)
+          ),
+        ]);
+      };
+
       if (uploadMode === 'pdf' && files[0]) {
-        content = await processPDF(files[0]);
+        content = await processWithTimeout(processPDF(files[0]));
       } else if (uploadMode === 'camera') {
         const images = previews
           .filter(p => p.data)
@@ -118,7 +153,7 @@ export default function UploadPage() {
         }
         content = { images, mode: 'vision' };
       } else if (uploadMode === 'image' && files.length > 0) {
-        content = await processImages(files);
+        content = await processWithTimeout(processImages(files));
       } else {
         throw new Error('NO_CONTENT');
       }
@@ -128,9 +163,20 @@ export default function UploadPage() {
         throw new Error('EMPTY_CONTENT');
       }
 
-      // Try to store in sessionStorage (can fail if content too large)
+      // Show truncation warning if pages were skipped
+      if (content.truncated) {
+        console.warn(`Report had ${content.truncated} pages, only first 10 were processed.`);
+      }
+
+      // Pre-storage size check
+      const contentStr = JSON.stringify(content);
+      if (contentStr.length > MAX_STORAGE_BYTES) {
+        console.warn(`Content size (${(contentStr.length / 1024 / 1024).toFixed(2)} MB) exceeds storage limit. Report may be too large.`);
+        throw new Error('STORAGE_FULL');
+      }
+
+      // Try to store in sessionStorage
       try {
-        const contentStr = JSON.stringify(content);
         sessionStorage.setItem('ld-upload-content', contentStr);
       } catch (storageErr) {
         console.error('sessionStorage error:', storageErr);
@@ -140,7 +186,6 @@ export default function UploadPage() {
       navigate('/analyzing');
     } catch (err) {
       console.error('Processing error:', err);
-      setProcessing(false);
 
       // Show user-friendly error messages
       switch (err.message) {
@@ -158,10 +203,16 @@ export default function UploadPage() {
         case 'EMPTY_CONTENT':
           setError('No content found to analyze. Please upload your report again.');
           break;
+        case 'PROCESSING_TIMEOUT':
+          setError('Processing is taking too long. Try uploading a smaller file or a lower-resolution image.');
+          break;
         default:
           setError("Something went wrong while processing your report. Please try again, or use a different file format.");
           break;
       }
+    } finally {
+      // ALWAYS reset processing state — prevents the button from being permanently dead
+      setProcessing(false);
     }
   };
 
@@ -205,6 +256,26 @@ export default function UploadPage() {
               Dismiss
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Size Warning Banner */}
+      {sizeWarning && !error && (
+        <div className="animate-fade-in" style={{
+          background: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)',
+          border: '1px solid #F59E0B',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          fontSize: '0.85rem',
+          color: '#92400E',
+          lineHeight: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+        }}>
+          <span style={{ flexShrink: 0 }}>&#x26A0;&#xFE0F;</span>
+          {sizeWarning}
         </div>
       )}
 
