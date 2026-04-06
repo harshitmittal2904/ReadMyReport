@@ -51,7 +51,7 @@ export default function Header() {
           }}>LabDecode</span>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           {navItems.map(item => (
             <Link
               key={item.path}
@@ -93,8 +93,7 @@ export default function Header() {
 
       <style>{`
         @media (max-width: 768px) {
-          .nav-label { display: none; }
-          .nav-icon { font-size: 1.25rem !important; }
+          .desktop-nav { display: none !important; }
         }
       `}</style>
     </header>
