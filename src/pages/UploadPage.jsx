@@ -6,7 +6,7 @@ import { processPDF, processImages } from '../services/pdfService';
 
 const MAX_FILE_SIZE_HARD = 50 * 1024 * 1024; // 50MB hard reject
 const MAX_FILE_SIZE_WARN = 20 * 1024 * 1024; // 20MB warning
-const MAX_STORAGE_BYTES = 4_500_000; // 4.5MB sessionStorage safety limit
+const MAX_STORAGE_BYTES = 4_800_000; // 4.8MB sessionStorage safety limit
 
 export default function UploadPage() {
   const { t } = useTranslation();
