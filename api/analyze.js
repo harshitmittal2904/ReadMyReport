@@ -1,3 +1,4 @@
+/* global process */
 // Vercel Edge Function: proxies requests to Gemini API with Groq text-only fallback
 // Edge runtime gives ~25s on Hobby plan (vs 10s for Serverless)
 

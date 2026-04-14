@@ -14,17 +14,6 @@ export default function AnalyzingPage() {
   const [retrying, setRetrying] = useState(false);
   const hasStarted = useRef(false);
 
-  useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-
-    const interval = setInterval(() => {
-      setStep(prev => (prev < STEPS.length - 1 ? prev + 1 : prev));
-    }, 2500);
-
-    runAnalysis().finally(() => clearInterval(interval));
-  }, []);
-
   const runAnalysis = async () => {
     const contentStr = sessionStorage.getItem('ld-upload-content');
     const contextStr = sessionStorage.getItem('ld-user-context');
@@ -86,6 +75,17 @@ export default function AnalyzingPage() {
       setRetrying(false);
     });
   };
+
+  useEffect(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
+    const interval = setInterval(() => {
+      setStep(prev => (prev < STEPS.length - 1 ? prev + 1 : prev));
+    }, 2500);
+
+    runAnalysis().finally(() => clearInterval(interval));
+  }, []);
 
   return (
     <div style={{

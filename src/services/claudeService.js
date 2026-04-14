@@ -175,14 +175,10 @@ export async function analyzeReport(content, userContext = {}) {
   // Auto-retry once on retryable errors
   if (RETRYABLE_ERRORS.includes(lastError.message)) {
     await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-    try {
-      const result = await callAPI(requestBody);
-      lastSuccessTime = Date.now();
-      incrementHourlyCount();
-      return result;
-    } catch (error) {
-      throw error; // Throw second attempt's error
-    }
+    const result = await callAPI(requestBody);
+    lastSuccessTime = Date.now();
+    incrementHourlyCount();
+    return result;
   }
 
   throw lastError;
