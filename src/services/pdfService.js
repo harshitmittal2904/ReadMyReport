@@ -5,7 +5,7 @@ import { compressImageToTarget, calculatePerImageBudget } from '../utils/imageCo
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const MAX_RENDER_DIMENSION = 1500;
-const MAX_VISION_PAGES = 10;
+const MAX_VISION_PAGES = 6;
 
 /**
  * Extract text from a PDF file. If text extraction yields little content,
@@ -40,9 +40,16 @@ export async function processPDF(file) {
     }
   }
 
-  // If we got meaningful text (>100 chars per page avg), use text mode
+  // If we got meaningful text, check if it's real lab data (not OCR artifacts)
   if (allText.trim().length > numPages * 100) {
-    return { text: allText.trim(), mode: 'text' };
+    // Real lab text has many numeric values; OCR artifacts are mostly words
+    const digitTokens = allText.match(/\d+\.?\d*/g) || [];
+    const avgDigitsPerPage = digitTokens.length / numPages;
+    if (avgDigitsPerPage >= 10) {
+      return { text: allText.trim(), mode: 'text' };
+    }
+    // Low digit density — likely OCR garbage, fall through to vision
+    console.warn(`Text extracted but low digit density (${avgDigitsPerPage.toFixed(1)}/page), using vision mode`);
   }
 
   // Fallback: render pages as images for Vision API

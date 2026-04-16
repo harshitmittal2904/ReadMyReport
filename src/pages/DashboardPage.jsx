@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [view, setView] = useState('organs');
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [truncatedPages, setTruncatedPages] = useState(null);
 
   useEffect(() => {
     const data = sessionStorage.getItem('ld-analysis-result');
@@ -31,6 +32,9 @@ export default function DashboardPage() {
     } else {
       navigate('/upload', { replace: true });
     }
+    // Check for truncated pages
+    const truncated = sessionStorage.getItem('ld-truncated-pages');
+    if (truncated) setTruncatedPages(parseInt(truncated, 10));
   }, []);
 
   const handleSave = () => {
@@ -118,6 +122,22 @@ export default function DashboardPage() {
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1.5rem' }}>
       {/* Disclaimer Banner */}
       <DisclaimerBanner style={{ marginBottom: '1.5rem' }} />
+
+      {/* Truncation Warning */}
+      {truncatedPages && (
+        <div className="animate-fade-in" style={{
+          background: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)',
+          border: '1px solid #F59E0B',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.75rem 1rem',
+          marginBottom: '1rem',
+          fontSize: '0.85rem',
+          color: '#92400E',
+          lineHeight: 1.5,
+        }}>
+          Your report had {truncatedPages} pages. We analyzed the first 6 for best accuracy. Some parameters from later pages may not appear.
+        </div>
+      )}
 
       {/* Summary Card with gradient */}
       <div className="card animate-slide-up" style={{

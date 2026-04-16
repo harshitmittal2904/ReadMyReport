@@ -1,7 +1,7 @@
 const MAX_DIMENSION = 1500;
 const JPEG_QUALITY = 0.8;
 const TARGET_SIZE_BYTES = 1024 * 1024; // 1MB
-const TOTAL_BUDGET_BYTES = 3_500_000; // 3.5MB total for all images (sessionStorage safe)
+const TOTAL_BUDGET_BYTES = 4_200_000; // 4.2MB total for all images (sessionStorage safe)
 
 /**
  * Compress an image file using Canvas API.
@@ -119,8 +119,8 @@ export function calculatePerImageBudget(imageCount) {
 }
 
 function compressToTarget(img, targetBytes) {
-  const qualitySteps = [0.85, 0.7, 0.5, 0.3];
-  const dimensionSteps = [1500, 1200, 1000];
+  const qualitySteps = [0.85, 0.7, 0.55, 0.5];
+  const dimensionSteps = [1500, 1300, 1200];
 
   for (const maxDim of dimensionSteps) {
     for (const quality of qualitySteps) {
@@ -154,9 +154,9 @@ function compressToTarget(img, targetBytes) {
     }
   }
 
-  // If we still can't fit, return the smallest we managed (1000px, quality 0.3)
+  // If we still can't fit, return the smallest we managed (1200px, quality 0.5)
   let { width, height } = img;
-  const ratio = Math.min(1000 / width, 1000 / height, 1);
+  const ratio = Math.min(1200 / width, 1200 / height, 1);
   width = Math.round(width * ratio);
   height = Math.round(height * ratio);
 
@@ -166,7 +166,7 @@ function compressToTarget(img, targetBytes) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0, width, height);
 
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.3);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
   const base64 = dataUrl.split(',')[1];
   canvas.width = 0;
   canvas.height = 0;
