@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useReport } from '../contexts/ReportContext';
 
 export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setAnalysisResult } = useReport();
 
   const features = [
     { icon: '📱', title: t('landing.feature_1_title'), desc: t('landing.feature_1_desc') },
@@ -22,7 +24,7 @@ export default function LandingPage() {
   const handleTrySample = () => {
     // Lazy-load sample data and navigate to dashboard
     import('../data/sampleReport').then(mod => {
-      sessionStorage.setItem('ld-analysis-result', JSON.stringify(mod.sampleReport));
+      setAnalysisResult(mod.sampleReport);
       navigate('/dashboard');
     }).catch(() => {
       navigate('/upload');

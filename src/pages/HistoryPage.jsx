@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getReports, deleteReport } from '../utils/storage';
+import { useReport } from '../contexts/ReportContext';
 
 export default function HistoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setAnalysisResult } = useReport();
   const [reports, setReports] = useState(() => getReports());
 
   const handleView = (report) => {
-    sessionStorage.setItem('ld-analysis-result', JSON.stringify(report.analysis));
+    setAnalysisResult(report.analysis);
     navigate('/dashboard');
   };
 

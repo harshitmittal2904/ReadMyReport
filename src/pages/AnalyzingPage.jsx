@@ -3,41 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { analyzeReport } from '../services/claudeService';
 import { validateAnalysis } from '../utils/validateAnalysis';
+import { useReport } from '../contexts/ReportContext';
 
 const STEPS = ['reading', 'identifying', 'categorizing', 'generating', 'almost'];
 
 export default function AnalyzingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { uploadContent, userContext, setAnalysisResult, setTruncatedPages } = useReport();
   const [step, setStep] = useState(0);
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
   const hasStarted = useRef(false);
 
   const runAnalysis = async () => {
-    const contentStr = sessionStorage.getItem('ld-upload-content');
-    const contextStr = sessionStorage.getItem('ld-user-context');
-
-    if (!contentStr) {
+    if (!uploadContent) {
       setError('No report content found to analyze. Please go back and upload a report.');
       return;
     }
 
     try {
-      const content = JSON.parse(contentStr);
-      const userContext = contextStr ? JSON.parse(contextStr) : {};
-      const analysis = await analyzeReport(content, userContext);
+      const analysis = await analyzeReport(uploadContent, userContext || {});
 
       // Cross-validate AI statuses against local reference ranges
       validateAnalysis(analysis);
 
-      sessionStorage.setItem('ld-analysis-result', JSON.stringify(analysis));
+      setAnalysisResult(analysis);
 
       // Pass truncation info to dashboard if present
-      if (content.truncated) {
-        sessionStorage.setItem('ld-truncated-pages', String(content.truncated));
-      } else {
-        sessionStorage.removeItem('ld-truncated-pages');
+      if (uploadContent.truncated) {
+        setTruncatedPages(uploadContent.truncated);
       }
 
       navigate('/dashboard', { replace: true });

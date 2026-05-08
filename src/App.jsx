@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ReportProvider } from './contexts/ReportContext';
 import './i18n';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -32,6 +33,7 @@ function PageLoader() {
 export default function App() {
   return (
     <ThemeProvider>
+      <ReportProvider>
       <BrowserRouter>
         <Header />
         <main style={{ flex: 1 }}>
@@ -52,6 +54,7 @@ export default function App() {
         <Footer />
         <MobileNav />
       </BrowserRouter>
+      </ReportProvider>
       <Analytics />
     </ThemeProvider>
   );

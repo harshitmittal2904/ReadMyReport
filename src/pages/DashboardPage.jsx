@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
+import { useReport } from '../contexts/ReportContext';
 import DisclaimerBanner from '../components/DisclaimerBanner';
 import HealthSpectrum from '../components/HealthSpectrum';
 import OrganSystemCard from '../components/OrganSystemCard';
@@ -16,26 +17,21 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const { simpleMode } = useTheme();
   const navigate = useNavigate();
+  const { analysisResult, truncatedPages } = useReport();
   const [analysis, setAnalysis] = useState(null);
   const [filter, setFilter] = useState('all');
   const [expandedSystem, setExpandedSystem] = useState(null);
   const [view, setView] = useState('organs');
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [truncatedPages, setTruncatedPages] = useState(null);
 
   useEffect(() => {
-    const data = sessionStorage.getItem('ld-analysis-result');
-    if (data) {
-      try { setAnalysis(JSON.parse(data)); }
-      catch { navigate('/upload', { replace: true }); }
+    if (analysisResult) {
+      setAnalysis(analysisResult);
     } else {
       navigate('/upload', { replace: true });
     }
-    // Check for truncated pages
-    const truncated = sessionStorage.getItem('ld-truncated-pages');
-    if (truncated) setTruncatedPages(parseInt(truncated, 10));
-  }, []);
+  }, [analysisResult]);
 
   const handleSave = () => {
     if (analysis && !saved) {

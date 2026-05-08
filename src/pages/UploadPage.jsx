@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import CameraCapture from '../components/CameraCapture';
 import { processPDF, processImages } from '../services/pdfService';
+import { useReport } from '../contexts/ReportContext';
 
 const MAX_FILE_SIZE_HARD = 50 * 1024 * 1024; // 50MB hard reject
 const MAX_FILE_SIZE_WARN = 20 * 1024 * 1024; // 20MB warning
-const MAX_STORAGE_BYTES = 4_800_000; // 4.8MB sessionStorage safety limit
 
 export default function UploadPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setUploadContent } = useReport();
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -163,26 +164,8 @@ export default function UploadPage() {
         throw new Error('EMPTY_CONTENT');
       }
 
-      // Show truncation warning if pages were skipped
-      if (content.truncated) {
-        console.warn(`Report had ${content.truncated} pages, only first 10 were processed.`);
-      }
-
-      // Pre-storage size check
-      const contentStr = JSON.stringify(content);
-      if (contentStr.length > MAX_STORAGE_BYTES) {
-        console.warn(`Content size (${(contentStr.length / 1024 / 1024).toFixed(2)} MB) exceeds storage limit. Report may be too large.`);
-        throw new Error('STORAGE_FULL');
-      }
-
-      // Try to store in sessionStorage
-      try {
-        sessionStorage.setItem('ld-upload-content', contentStr);
-      } catch (storageErr) {
-        console.error('sessionStorage error:', storageErr);
-        throw new Error('STORAGE_FULL');
-      }
-
+      // Store in React context (no size limit)
+      setUploadContent(content);
       navigate('/analyzing');
     } catch (err) {
       console.error('Processing error:', err);
@@ -194,9 +177,6 @@ export default function UploadPage() {
           break;
         case 'PDF_UNREADABLE':
           setError("We couldn't read your PDF. Try uploading a higher-quality scan or take a photo of each page instead.");
-          break;
-        case 'STORAGE_FULL':
-          setError('Your report is too large to process. Try uploading fewer pages or a lower-resolution image.');
           break;
         case 'NO_IMAGES':
         case 'NO_CONTENT':

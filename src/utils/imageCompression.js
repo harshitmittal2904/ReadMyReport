@@ -1,7 +1,7 @@
 const MAX_DIMENSION = 1500;
 const JPEG_QUALITY = 0.8;
 const TARGET_SIZE_BYTES = 1024 * 1024; // 1MB
-const TOTAL_BUDGET_BYTES = 4_200_000; // 4.2MB total for all images (sessionStorage safe)
+const TOTAL_BUDGET_BYTES = 8_000_000; // 8MB total for all images (in-memory, no sessionStorage limit)
 
 /**
  * Compress an image file using Canvas API.

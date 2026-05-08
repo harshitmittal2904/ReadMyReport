@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useReport } from '../contexts/ReportContext';
 
 const AGE_RANGES = ['18-25', '26-35', '36-45', '46-55', '56-65', '65+'];
 const SEX_OPTIONS = ['male', 'female', 'prefer_not_to_say'];
@@ -9,6 +10,7 @@ const CONDITIONS = ['diabetes', 'thyroid', 'heart', 'kidney', 'anemia', 'none'];
 export default function PreAnalysisPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setUserContext } = useReport();
 
   const [ageRange, setAgeRange] = useState(null);
   const [sex, setSex] = useState(null);
@@ -31,7 +33,7 @@ export default function PreAnalysisPage() {
 
   const handleSkip = () => {
     setSkipped(true);
-    sessionStorage.removeItem('ld-user-context');
+    setUserContext(null);
     navigate('/analyzing');
   };
 
@@ -42,7 +44,7 @@ export default function PreAnalysisPage() {
       pregnant: sex === 'female' ? pregnant : null,
       conditions: conditions.includes('none') ? [] : conditions,
     };
-    sessionStorage.setItem('ld-user-context', JSON.stringify(context));
+    setUserContext(context);
     navigate('/analyzing');
   };
 

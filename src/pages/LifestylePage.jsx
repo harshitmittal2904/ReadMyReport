@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DisclaimerBanner from '../components/DisclaimerBanner';
+import { useReport } from '../contexts/ReportContext';
 
 const categoryIcons = {
   nutrition: '🥗',
@@ -22,17 +23,16 @@ const categoryKeys = {
 export default function LifestylePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { analysisResult } = useReport();
   const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
-    const data = sessionStorage.getItem('ld-analysis-result');
-    if (data) {
-      try { setAnalysis(JSON.parse(data)); }
-      catch { navigate('/dashboard', { replace: true }); }
+    if (analysisResult) {
+      setAnalysis(analysisResult);
     } else {
       navigate('/upload', { replace: true });
     }
-  }, []);
+  }, [analysisResult]);
 
   if (!analysis) return null;
 

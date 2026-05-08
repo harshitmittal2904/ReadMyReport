@@ -108,80 +108,16 @@ const RESPONSE_SCHEMA = {
   },
 };
 
-let lastSuccessTime = 0;
-const RATE_LIMIT_MS = 30000;
-const API_TIMEOUT_MS = 25000;
-const RETRY_DELAY_MS = 2000;
-
-// Hourly rate limiting
-const HOURLY_LIMIT = 20;
-const HOURLY_KEY = 'ld-hourly-count';
-
-function getHourlyCount() {
-  try {
-    const data = JSON.parse(localStorage.getItem(HOURLY_KEY) || '{}');
-    const now = Date.now();
-    if (!data.timestamp || now - data.timestamp > 3600000) {
-      return { count: 0, timestamp: now };
-    }
-    return data;
-  } catch {
-    return { count: 0, timestamp: Date.now() };
-  }
-}
-
-function incrementHourlyCount() {
-  const data = getHourlyCount();
-  data.count += 1;
-  if (!data.timestamp) data.timestamp = Date.now();
-  try {
-    localStorage.setItem(HOURLY_KEY, JSON.stringify(data));
-  } catch { /* ignore */ }
-}
-
-const RETRYABLE_ERRORS = ['TIMEOUT', 'API_ERROR', 'PARSE_ERROR'];
+const API_TIMEOUT_MS = 60000; // 60s — matches Edge function limit
 
 export async function analyzeReport(content, userContext = {}) {
-  // Offline check
   if (!navigator.onLine) {
     throw new Error('OFFLINE');
   }
 
-  // Per-call rate limit (30s cooldown after SUCCESS only)
-  const now = Date.now();
-  if (now - lastSuccessTime < RATE_LIMIT_MS) {
-    throw new Error('RATE_LIMITED');
-  }
-
-  // Hourly rate limit
-  const hourly = getHourlyCount();
-  if (hourly.count >= HOURLY_LIMIT) {
-    throw new Error('HOURLY_LIMIT');
-  }
-
   const requestBody = buildRequestBody(content, userContext);
 
-  // First attempt
-  let lastError;
-  try {
-    const result = await callAPI(requestBody);
-    lastSuccessTime = Date.now();
-    incrementHourlyCount();
-    return result;
-  } catch (error) {
-    lastError = error;
-  }
-
-  // Auto-retry once on retryable errors
-  if (RETRYABLE_ERRORS.includes(lastError.message)) {
-    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-    const result = await callAPI(requestBody);
-    lastSuccessTime = Date.now();
-    incrementHourlyCount();
-    return result;
-  }
-
-  throw lastError;
+  return await callAPI(requestBody);
 }
 
 async function callAPI(requestBody) {
@@ -217,10 +153,8 @@ async function callAPI(requestBody) {
     // Parse JSON from response
     let parsed;
     try {
-      // Try raw parse first (structured output should be clean JSON)
       parsed = JSON.parse(text.trim());
     } catch {
-      // Fallback: try extracting from markdown fences
       try {
         const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
@@ -234,20 +168,15 @@ async function callAPI(requestBody) {
       }
     }
 
-    // Check if this is actually a lab report
     if (parsed.is_lab_report === false) {
       throw new Error('NOT_LAB_REPORT');
     }
 
-    // Validate the response has parameters
     if (!parsed.parameters || parsed.parameters.length === 0) {
       throw new Error('NO_PARAMETERS');
     }
 
-    // Attach provider metadata
     parsed._provider = data._provider || 'unknown';
-    parsed._retried = data._retried || false;
-
     return parsed;
   } catch (error) {
     clearTimeout(timeout);
@@ -259,7 +188,7 @@ async function callAPI(requestBody) {
       throw new Error('NETWORK_ERROR');
     }
     if ([
-      'RATE_LIMITED', 'HOURLY_LIMIT', 'PARSE_ERROR', 'API_ERROR',
+      'RATE_LIMITED', 'PARSE_ERROR', 'API_ERROR',
       'OFFLINE', 'TIMEOUT', 'EMPTY_RESPONSE', 'NOT_LAB_REPORT',
       'NO_PARAMETERS', 'NETWORK_ERROR', 'VISION_UNAVAILABLE',
     ].includes(error.message)) {
@@ -273,7 +202,6 @@ async function callAPI(requestBody) {
 function buildRequestBody(content, userContext) {
   let userPrompt = '';
 
-  // Add user context if provided
   if (userContext.age || userContext.sex) {
     userPrompt += 'PATIENT CONTEXT (provided by user):\n';
     if (userContext.age) userPrompt += `Age: ${userContext.age}\n`;
@@ -288,7 +216,6 @@ function buildRequestBody(content, userContext) {
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: RESPONSE_SCHEMA,
-      thinkingConfig: { thinkingBudget: 2048 },
     },
   };
 
