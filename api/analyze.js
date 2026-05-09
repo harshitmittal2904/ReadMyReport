@@ -1,10 +1,10 @@
 /* global process */
-// Vercel Serverless Function: proxies requests to Gemini API
-// maxDuration: 60 gives us 60s on Hobby plan (Edge caps at 25s)
+// Vercel Serverless Function (Node.js): proxies requests to Gemini API
+// maxDuration: 60 gives 60s on Hobby plan
 
 export const config = { maxDuration: 60 };
 
-const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024;
 const GEMINI_TIMEOUT_MS = 55000;
 
 function isAllowedOrigin(origin) {
@@ -15,24 +15,15 @@ function isAllowedOrigin(origin) {
   return false;
 }
 
-function corsHeaders(origin) {
+function setCors(res, origin) {
   const allowed = isAllowedOrigin(origin);
-  return {
-    'Access-Control-Allow-Origin': allowed ? origin : 'https://read-my-report.vercel.app',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-  };
-}
-
-function jsonResponse(body, status, origin) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-  });
+  res.setHeader('Access-Control-Allow-Origin', allowed ? origin : 'https://read-my-report.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 }
 
 async function callGemini(body, apiKey, timeoutMs) {
@@ -76,60 +67,57 @@ async function callGemini(body, apiKey, timeoutMs) {
   }
 }
 
-export default async function handler(request) {
-  const origin = request.headers.get('origin') || '';
+export default async function handler(req, res) {
+  const origin = req.headers['origin'] || '';
+  setCors(res, origin);
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
   }
 
-  if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, 405, origin);
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const contentType = request.headers.get('content-type') || '';
+  const contentType = req.headers['content-type'] || '';
   if (!contentType.includes('application/json')) {
-    return jsonResponse({ error: 'Content-Type must be application/json' }, 400, origin);
+    return res.status(400).json({ error: 'Content-Type must be application/json' });
   }
 
-  const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+  const contentLength = parseInt(req.headers['content-length'] || '0', 10);
   if (contentLength > MAX_PAYLOAD_BYTES) {
-    return jsonResponse({ error: 'Payload too large. Maximum 10MB allowed.' }, 413, origin);
+    return res.status(413).json({ error: 'Payload too large. Maximum 10MB allowed.' });
   }
 
   const geminiKey = process.env.GEMINI_API_KEY;
 
   if (!geminiKey) {
     console.error('No GEMINI_API_KEY configured');
-    return jsonResponse({ error: 'Server configuration error' }, 500, origin);
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonResponse({ error: 'Invalid JSON body' }, 400, origin);
+  const body = req.body;
+  if (!body || typeof body !== 'object') {
+    return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
-  // Single attempt with generous timeout
   const result = await callGemini(body, geminiKey, GEMINI_TIMEOUT_MS);
 
   if (result.ok) {
-    return jsonResponse({
+    return res.status(200).json({
       candidates: [{ content: { parts: [{ text: result.text }] } }],
       _provider: 'gemini',
-    }, 200, origin);
+    });
   }
 
-  // Clear error messages
   if (result.status === 429) {
-    return jsonResponse({ error: 'API quota exceeded. Please try again later.' }, 429, origin);
+    return res.status(429).json({ error: 'API quota exceeded. Please try again later.' });
   }
 
   if (result.error === 'TIMEOUT') {
-    return jsonResponse({ error: 'Analysis timed out. Please try again.' }, 504, origin);
+    return res.status(504).json({ error: 'Analysis timed out. Please try again.' });
   }
 
   console.error('Gemini error:', result.status, result.error || result.data);
-  return jsonResponse({ error: 'Analysis service unavailable. Please try again.' }, 502, origin);
+  return res.status(502).json({ error: 'Analysis service unavailable. Please try again.' });
 }
