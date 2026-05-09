@@ -1,8 +1,8 @@
 /* global process */
-// Vercel Edge Function: proxies requests to Gemini API
-// Edge runtime gives ~25s on Hobby plan
+// Vercel Serverless Function: proxies requests to Gemini API
+// maxDuration: 60 gives us 60s on Hobby plan (Edge caps at 25s)
 
-export const config = { runtime: 'edge', maxDuration: 60 };
+export const config = { maxDuration: 60 };
 
 const MAX_PAYLOAD_BYTES = 10 * 1024 * 1024; // 10MB
 const GEMINI_TIMEOUT_MS = 55000;
